@@ -18,10 +18,13 @@ exports.extractSiteContext = (text = "") => {
 };
 
 
-exports.cleanMessageText = (text = "") => {
-  return text
-    .replace(/SITE:[A-Z0-9_-]+/gi, "")
-    .replace(/SUB:[A-Z0-9_-]+/gi, "")
-    .trim();
-};
+function cleanMessageText(text) {
+  if (!text) return "";
 
+  return text
+    .replace(/SITE:[^| ]+/gi, "")
+    .replace(/SUB:[^| ]+/gi, "")
+    .replace(/^\s*\|\s*/, "")
+    .trim();
+}
+exports.cleanMessageText = cleanMessageText;

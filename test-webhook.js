@@ -8,28 +8,26 @@ const { receiveMessage } = require("./src/controllers/webhook.controller");
 
   const req = {
     body: {
-      entry: [{
-        changes: [{
-          value: {
-            messages: [{
-              id: "wamid.TEST125",
-              from: "919999998888",
-              type: "text",
-              text: {
-                body: "SITE:GITA Oil leakage near kjcnvdk dbfkdjs machine"
-              }
-            }]
-          }
+      "entry": [{
+    "changes": [{
+      "value": {
+        "messages": [{
+          "id": "wamid.TEST_WELCOME",
+          "from": "919999000101",
+          "type": "text",
+          "text": { "body": "SITE:GITA Oil leakage near machine" }
         }]
-      }]
+      }
+    }]
+  }]
     }
   };
 
   const res = {
-    sendStatus: (code) => {
-      console.log("Response Status:", code);
-      process.exit(0);
-    }
+   sendStatus: (code) => {
+  console.log("Response Status:", code);
+  // ❌ DO NOT exit immediately
+}
   };
 
   await receiveMessage(req, res);

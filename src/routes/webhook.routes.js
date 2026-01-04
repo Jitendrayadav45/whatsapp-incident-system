@@ -1,13 +1,12 @@
 const express = require("express");
 const router = express.Router();
 
-// ✅ CORRECT IMPORT
 const webhookController = require("../controllers/webhook.controller");
 
-// Webhook verification
-router.get("/webhook", webhookController.verifyWebhook);
+// Meta Webhook Verification
+router.get("/", webhookController.verifyWebhook);
 
-// Incoming WhatsApp messages
-router.post("/webhook", webhookController.receiveMessage);
+// Incoming WhatsApp Messages
+router.post("/", webhookController.receiveMessage);
 
 module.exports = router;

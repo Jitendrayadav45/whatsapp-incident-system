@@ -3,10 +3,10 @@ const generateTicketId = require("../utils/ticketId.generator");
 const hashPhone = require("../utils/hash.util");
 
 /**
- * 🎫 Create New Ticket (STEP-2 + STEP-3)
- * - Safe for WhatsApp retries
- * - Enforces site mapping
- * - DB-level uniqueness
+ * 🎫 Create New Ticket
+ * - WhatsApp retry safe
+ * - QR site enforced
+ * - System of record
  */
 async function createTicket({
   phone,
@@ -24,12 +24,12 @@ async function createTicket({
   const ticketId = generateTicketId();
   const phoneHash = hashPhone(phone);
 
-  return await Ticket.create({
+  return Ticket.create({
     ticketId,
-    waMessageId,   // 🔐 Idempotency key (duplicate guard)
+    waMessageId,
     phoneHash,
-    siteId,        // ✅ STEP-3 mandatory
-    subSiteId,     // optional
+    siteId,
+    subSiteId,
     message,
     status: "OPEN",
     possibleDuplicateOf,
@@ -38,16 +38,14 @@ async function createTicket({
 }
 
 /**
- * 🔍 Get Ticket by Business Ticket ID
- * Used by STATUS command & admin panel
+ * 🔍 Get Ticket by Ticket ID
  */
 async function getTicketById(ticketId) {
-  return await Ticket.findOne({ ticketId }).lean();
+  return Ticket.findOne({ ticketId }).lean();
 }
 
 /**
- * 🔁 WhatsApp Duplicate Message Guard
- * Prevents duplicate tickets on retries
+ * 🔁 WhatsApp retry guard
  */
 async function isDuplicateMessage(waMessageId) {
   if (!waMessageId) return false;
@@ -55,30 +53,56 @@ async function isDuplicateMessage(waMessageId) {
   return Boolean(exists);
 }
 
+/**
+ * 🧠 Soft duplicate detection (Option-C)
+ */
 async function findRecentSimilarTicket({
   phoneHash,
   siteId,
   subSiteId,
   messageText,
-  minutes = 30
+  minutes
 }) {
-  if (!messageText) return null;
-
   const since = new Date(Date.now() - minutes * 60 * 1000);
 
-  return Ticket.findOne({
+  const found = await Ticket.findOne({
     phoneHash,
     siteId,
-    subSiteId: subSiteId || null,
+    subSiteId,
     status: "OPEN",
     createdAt: { $gte: since },
-    "message.text": {
-      $regex: messageText.slice(0, 40), // simple similarity
-      $options: "i"
+    "message.text": { $regex: messageText, $options: "i" }
+  }).lean();
+
+  if (!found) return null;
+
+  return {
+    ticketId: found.possibleDuplicateOf || found.ticketId
+  };
+}
+
+/**
+ * 🤖 Attach AI analysis (annotation only)
+ */
+async function attachAIAnalysis(ticketId, aiAnalysis) {
+  if (!ticketId || !aiAnalysis) return;
+
+  await Ticket.updateOne(
+    { _id: ticketId },
+    {
+      $set: {
+        aiAnalysis: {
+          lifeSavingRuleViolated: aiAnalysis.lifeSavingRuleViolated,
+          ruleName: aiAnalysis.ruleName,
+          riskLevel: aiAnalysis.riskLevel,
+          observationSummary: aiAnalysis.observationSummary,
+          whyThisIsDangerous: aiAnalysis.whyThisIsDangerous,
+          mentorPrecautions: aiAnalysis.mentorPrecautions || [],
+          confidence: aiAnalysis.confidence
+        }
+      }
     }
-  })
-    .sort({ createdAt: -1 })
-    .lean();
+  );
 }
 
 
@@ -86,6 +110,6 @@ module.exports = {
   createTicket,
   getTicketById,
   isDuplicateMessage,
-  findRecentSimilarTicket
+  findRecentSimilarTicket,
+  attachAIAnalysis
 };
-

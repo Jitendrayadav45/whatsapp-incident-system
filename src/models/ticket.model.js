@@ -54,6 +54,17 @@ const ticketSchema = new mongoose.Schema(
       default: null,
     },
 
+    aiAnalysis: {
+    lifeSavingRuleViolated: Boolean,
+    ruleName: String,
+    riskLevel: String,
+    observationSummary: String,
+    whyThisIsDangerous: String,
+    mentorPrecautions: [String],
+    confidence: Number,
+    analyzedAt: Date
+  },
+
     status: {
       type: String,
       enum: ["OPEN", "IN_PROGRESS", "RESOLVED"],

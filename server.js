@@ -11,7 +11,8 @@ app.use(express.json());
 connectDB();
 
 // routes
-app.use("/", webhookRoutes);
+app.use("/webhook", webhookRoutes);
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
