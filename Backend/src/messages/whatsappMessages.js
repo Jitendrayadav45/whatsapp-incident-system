@@ -25,6 +25,24 @@ Please scan the QR code displayed at your site and then send the message again.
 If the problem is urgent, inform your site supervisor.
 `,
 
+  INVALID_SITE_MESSAGE: `
+⚠️ Site not recognized.
+
+Please scan the QR code displayed at your site.
+If the issue persists, contact the site administrator.
+
+No ticket has been created.
+`,
+
+  SUBSITE_NOT_FOUND_MESSAGE: `
+⚠️ Sub-site not recognized.
+
+Please ensure you scanned the correct QR code for your sub-site.
+If the issue persists, contact the site administrator.
+
+No ticket has been created.
+`,
+
   ISSUE_TOO_SHORT_MESSAGE: `
 ⚠️ Please describe the issue briefly after scanning the QR code.
 
@@ -123,25 +141,25 @@ Your observation has been shared with the safety team for review.
   ===================================================== */
 
   STATUS_REPLY_MESSAGE: (ticket) => {
-  const updatedAt = new Date(ticket.updatedAt);
+    const updatedAt = new Date(ticket.updatedAt);
 
-  const formatted = updatedAt.toLocaleString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-    timeZone: "Asia/Kolkata"
-  });
+    const formatted = updatedAt.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+      timeZone: "Asia/Kolkata"
+    });
 
-  return `
+    return `
 🎫 Ticket ID: ${ticket.ticketId}
 Status: ${ticket.status}
 Last Updated: ${formatted} IST
 `;
-},
+  },
 
   /* =====================================================
      🧾 STANDARD FOOTER (TRUST + NEXT ACTION)
@@ -168,3 +186,5 @@ Thank you for helping keep the site safe.
 Please try again after a few minutes or inform your site supervisor.
 `
 };
+
+

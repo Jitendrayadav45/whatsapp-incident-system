@@ -1,23 +1,29 @@
 const mongoose = require("mongoose");
 
-const siteSchema = new mongoose.Schema(
+const subSiteSchema = new mongoose.Schema(
   {
+    subSiteId: {
+      type: String,
+      required: true,
+      uppercase: true,
+      index: true // GITA1, ZONE-A
+    },
+
     siteId: {
       type: String,
       required: true,
-      unique: true,
       uppercase: true,
-      index: true // GITA, PLANT01
+      index: true // Parent site (GITA)
     },
 
-    siteName: {
+    subSiteName: {
       type: String,
       required: true
     },
 
     /**
      * 🔐 Governance
-     * OWNER who created this site
+     * Can be OWNER or SITE_ADMIN
      */
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -26,7 +32,7 @@ const siteSchema = new mongoose.Schema(
     },
 
     /**
-     * Optional metadata (future safe)
+     * Optional metadata
      */
     description: {
       type: String,
@@ -41,4 +47,12 @@ const siteSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Site", siteSchema);
+/**
+ * 🔒 One SubSite per Site
+ */
+subSiteSchema.index(
+  { siteId: 1, subSiteId: 1 },
+  { unique: true }
+);
+
+module.exports = mongoose.model("SubSite", subSiteSchema);

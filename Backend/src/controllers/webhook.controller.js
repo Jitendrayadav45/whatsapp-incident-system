@@ -5,6 +5,7 @@ const hashPhone = require("../utils/hash.util");
 const MESSAGES = require("../messages/whatsappMessages");
 const { analyzeSafety } = require("../services/safetyAI.service");
 const { fetchWhatsAppMedia } = require("../services/whatsappMedia.service");
+const { validateSiteContext } = require("../services/siteValidation.service");
 
 /**
  * 🔹 Webhook Verification
@@ -20,13 +21,15 @@ exports.verifyWebhook = (req, res) => {
 };
 
 /**
- * 🔹 WhatsApp Receiver
+ * 🔹 WhatsApp Receiver (PRODUCTION)
  */
 exports.receiveMessage = async (req, res) => {
   let sender = null;
 
   try {
-    const message = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+    const message =
+      req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+
     if (!message) return res.sendStatus(200);
 
     const { from, type, id: waMessageId } = message;
@@ -75,7 +78,7 @@ exports.receiveMessage = async (req, res) => {
       }
     }
 
-    /* 👋 MVP WELCOME FLOW */
+    /* 👋 MVP WELCOME FLOW (SAFE) */
     if (type === "text" && payload.text) {
       const text = payload.text.trim().toLowerCase();
 
@@ -99,18 +102,23 @@ exports.receiveMessage = async (req, res) => {
     const rawText = payload.text || "";
     const { siteId, subSiteId } = extractSiteContext(rawText);
 
-    if (!siteId) {
-      await sendWhatsAppReply(sender, MESSAGES.SITE_MISSING_MESSAGE);
+    /* 🔐 AUTHORITATIVE SITE VALIDATION (NEW – CRITICAL) */
+    const siteCheck = await validateSiteContext({ siteId, subSiteId });
+
+    if (!siteCheck.valid) {
+      await sendWhatsAppReply(sender, MESSAGES.INVALID_SITE_MESSAGE);
       return res.sendStatus(200);
     }
 
+    /* ✂️ Clean issue text AFTER site validation */
     payload.text = cleanMessageText(rawText);
+
     if (!payload.text || payload.text.length < 3) {
       await sendWhatsAppReply(sender, MESSAGES.ISSUE_TOO_SHORT_MESSAGE);
       return res.sendStatus(200);
     }
 
-    /* 🔁 SOFT DUPLICATE */
+    /* 🔁 SOFT DUPLICATE DETECTION */
     const duplicateTicket = await ticketService.findRecentSimilarTicket({
       phoneHash: hashPhone(sender),
       siteId,
@@ -119,7 +127,7 @@ exports.receiveMessage = async (req, res) => {
       minutes: 30
     });
 
-    /* 🎫 CREATE TICKET (SOURCE OF TRUTH) */
+    /* 🎫 CREATE TICKET (SYSTEM OF RECORD) */
     const ticket = await ticketService.createTicket({
       phone: sender,
       waMessageId,
@@ -167,7 +175,6 @@ exports.receiveMessage = async (req, res) => {
       });
 
       if (aiResult) {
-        // ✅ SAVE TO DB FIRST
         await ticketService.attachAIAnalysis(ticket._id, {
           lifeSavingRuleViolated: aiResult.life_saving_rule_violated,
           ruleName: aiResult.rule_name,
@@ -178,7 +185,6 @@ exports.receiveMessage = async (req, res) => {
           confidence: aiResult.confidence
         });
 
-        // ✅ THEN SEND WHATSAPP ADVISORY
         if (aiResult.life_saving_rule_violated) {
           await sendWhatsAppReply(
             sender,
@@ -195,16 +201,22 @@ exports.receiveMessage = async (req, res) => {
     }
 
     /* 📎 MEDIA ACK (UX ONLY) */
-    if (type === "image") await sendWhatsAppReply(sender, MESSAGES.IMAGE_CONFIRMATION_MESSAGE);
-    if (type === "audio") await sendWhatsAppReply(sender, MESSAGES.AUDIO_CONFIRMATION_MESSAGE);
-    if (type === "video") await sendWhatsAppReply(sender, MESSAGES.VIDEO_CONFIRMATION_MESSAGE);
-    if (type === "document") await sendWhatsAppReply(sender, MESSAGES.DOCUMENT_CONFIRMATION_MESSAGE);
+    if (type === "image")
+      await sendWhatsAppReply(sender, MESSAGES.IMAGE_CONFIRMATION_MESSAGE);
+    if (type === "audio")
+      await sendWhatsAppReply(sender, MESSAGES.AUDIO_CONFIRMATION_MESSAGE);
+    if (type === "video")
+      await sendWhatsAppReply(sender, MESSAGES.VIDEO_CONFIRMATION_MESSAGE);
+    if (type === "document")
+      await sendWhatsAppReply(sender, MESSAGES.DOCUMENT_CONFIRMATION_MESSAGE);
 
     return res.sendStatus(200);
 
   } catch (err) {
     console.error("❌ Webhook error:", err);
-    if (sender) await sendWhatsAppReply(sender, MESSAGES.SYSTEM_ERROR_MESSAGE);
+    if (sender) {
+      await sendWhatsAppReply(sender, MESSAGES.SYSTEM_ERROR_MESSAGE);
+    }
     return res.sendStatus(500);
   }
 };

@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const connectDB = require("./src/config/db");
-
+const adminRoutes = require("./src/routes/admin.routes");
 const webhookRoutes = require("./src/routes/webhook.routes");
 
 const app = express();
@@ -12,6 +12,7 @@ connectDB();
 
 // routes
 app.use("/webhook", webhookRoutes);
+app.use("/api", adminRoutes);
 
 
 const PORT = process.env.PORT || 3000;
