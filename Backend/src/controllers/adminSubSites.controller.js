@@ -87,3 +87,124 @@ exports.getSubSitesBySite = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+/**
+ * ⛔ DISABLE SUB-SITE (OWNER / SITE_ADMIN)
+ * PATCH /api/sites/:siteId/subsites/:subSiteId/disable
+ */
+exports.disableSubSite = async (req, res) => {
+  try {
+    const admin = req.admin;
+    const { siteId, subSiteId } = req.params;
+
+    if (![
+      "OWNER", "SITE_ADMIN"].includes(admin.role)) {
+      return res.status(403).json({ error: "Not allowed" });
+    }
+
+    if (
+      admin.role === "SITE_ADMIN" &&
+      !admin.allowedSites?.includes(siteId)
+    ) {
+      return res.status(403).json({ error: "Not authorized for this site" });
+    }
+
+    const subSite = await SubSite.findOne({ siteId, subSiteId });
+
+    if (!subSite) {
+      return res.status(404).json({ error: "SubSite not found" });
+    }
+
+    subSite.isActive = false;
+    await subSite.save();
+
+    return res.json({
+      message: "SubSite disabled successfully",
+      subSite
+    });
+
+  } catch (err) {
+    console.error("Disable SubSite error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * ✅ ENABLE SUB-SITE (OWNER / SITE_ADMIN)
+ * PATCH /api/sites/:siteId/subsites/:subSiteId/enable
+ */
+exports.enableSubSite = async (req, res) => {
+  try {
+    const admin = req.admin;
+    const { siteId, subSiteId } = req.params;
+
+    if (![
+      "OWNER", "SITE_ADMIN"].includes(admin.role)) {
+      return res.status(403).json({ error: "Not allowed" });
+    }
+
+    if (
+      admin.role === "SITE_ADMIN" &&
+      !admin.allowedSites?.includes(siteId)
+    ) {
+      return res.status(403).json({ error: "Not authorized for this site" });
+    }
+
+    const subSite = await SubSite.findOne({ siteId, subSiteId });
+
+    if (!subSite) {
+      return res.status(404).json({ error: "SubSite not found" });
+    }
+
+    subSite.isActive = true;
+    await subSite.save();
+
+    return res.json({
+      message: "SubSite enabled successfully",
+      subSite
+    });
+
+  } catch (err) {
+    console.error("Enable SubSite error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * 🗑️ DELETE SUB-SITE (OWNER / SITE_ADMIN)
+ * DELETE /api/sites/:siteId/subsites/:subSiteId
+ */
+exports.deleteSubSite = async (req, res) => {
+  try {
+    const admin = req.admin;
+    const { siteId, subSiteId } = req.params;
+
+    if (![
+      "OWNER", "SITE_ADMIN"].includes(admin.role)) {
+      return res.status(403).json({ error: "Not allowed" });
+    }
+
+    if (
+      admin.role === "SITE_ADMIN" &&
+      !admin.allowedSites?.includes(siteId)
+    ) {
+      return res.status(403).json({ error: "Not authorized for this site" });
+    }
+
+    const subSite = await SubSite.findOne({ siteId, subSiteId });
+
+    if (!subSite) {
+      return res.status(404).json({ error: "SubSite not found" });
+    }
+
+    await SubSite.deleteOne({ siteId, subSiteId });
+
+    return res.json({
+      message: "SubSite deleted permanently"
+    });
+
+  } catch (err) {
+    console.error("Delete SubSite error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};

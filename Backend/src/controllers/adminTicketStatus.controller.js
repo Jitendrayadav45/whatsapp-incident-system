@@ -4,12 +4,7 @@ const Ticket = require("../models/ticket.model");
  * =====================================================
  * 🔄 PATCH /api/tickets/:ticketId/status
  * =====================================================
- * Headers required:
- *  - x-admin-token
- *  - x-admin-role (OWNER | SITE_ADMIN | SUB_SITE_ADMIN)
- *  - x-site-id
- *  - x-sub-site-id (only for SUB_SITE_ADMIN)
- *
+ * Uses req.admin from auth middleware
  * Body:
  *  { "status": "IN_PROGRESS" | "RESOLVED" }
  * =====================================================
@@ -19,9 +14,7 @@ exports.updateTicketStatus = async (req, res) => {
     const { ticketId } = req.params;
     const { status } = req.body;
 
-    const adminRole = req.headers["x-admin-role"];
-    const adminSiteId = req.headers["x-site-id"];
-    const adminSubSiteId = req.headers["x-sub-site-id"];
+    const admin = req.admin; // From auth middleware
 
     /* ======================
        BASIC VALIDATIONS
@@ -45,13 +38,13 @@ exports.updateTicketStatus = async (req, res) => {
     ====================== */
 
     // OWNER → Full access
-    if (adminRole === "OWNER") {
+    if (admin.role === "OWNER") {
       // allowed
     }
 
     // SITE_ADMIN → Same site only
-    else if (adminRole === "SITE_ADMIN") {
-      if (ticket.siteId !== adminSiteId) {
+    else if (admin.role === "SITE_ADMIN") {
+      if (!admin.allowedSites?.includes(ticket.siteId)) {
         return res.status(403).json({
           error: "Access denied for this site"
         });
@@ -59,10 +52,10 @@ exports.updateTicketStatus = async (req, res) => {
     }
 
     // SUB_SITE_ADMIN → Same site + same subsite
-    else if (adminRole === "SUB_SITE_ADMIN") {
+    else if (admin.role === "SUB_SITE_ADMIN") {
       if (
-        ticket.siteId !== adminSiteId ||
-        ticket.subSiteId !== adminSubSiteId
+        !admin.allowedSites?.includes(ticket.siteId) ||
+        !admin.allowedSubSites?.includes(ticket.subSiteId)
       ) {
         return res.status(403).json({
           error: "Access denied for this sub-site"

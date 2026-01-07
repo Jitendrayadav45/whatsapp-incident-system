@@ -58,8 +58,7 @@ exports.getSites = async (req, res) => {
     const siteIds = sites.map(s => s.siteId);
 
     const subSites = await SubSite.find({
-      siteId: { $in: siteIds },
-      isActive: true
+      siteId: { $in: siteIds }
     }).lean();
 
     const response = sites.map(site => ({
@@ -70,7 +69,8 @@ exports.getSites = async (req, res) => {
         .filter(sub => sub.siteId === site.siteId)
         .map(sub => ({
           subSiteId: sub.subSiteId,
-          subSiteName: sub.subSiteName
+          subSiteName: sub.subSiteName,
+          isActive: sub.isActive
         }))
     }));
 
@@ -78,6 +78,107 @@ exports.getSites = async (req, res) => {
 
   } catch (err) {
     console.error("Get Sites error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * ⛔ DISABLE SITE (OWNER ONLY)
+ * PATCH /api/sites/:siteId/disable
+ */
+exports.disableSite = async (req, res) => {
+  try {
+    const admin = req.admin;
+    const { siteId } = req.params;
+
+    if (admin.role !== "OWNER") {
+      return res.status(403).json({ error: "Only OWNER can disable sites" });
+    }
+
+    const site = await Site.findOne({ siteId });
+
+    if (!site) {
+      return res.status(404).json({ error: "Site not found" });
+    }
+
+    site.isActive = false;
+    await site.save();
+
+    return res.json({
+      message: "Site disabled successfully",
+      site
+    });
+
+  } catch (err) {
+    console.error("Disable Site error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * ✅ ENABLE SITE (OWNER ONLY)
+ * PATCH /api/sites/:siteId/enable
+ */
+exports.enableSite = async (req, res) => {
+  try {
+    const admin = req.admin;
+    const { siteId } = req.params;
+
+    if (admin.role !== "OWNER") {
+      return res.status(403).json({ error: "Only OWNER can enable sites" });
+    }
+
+    const site = await Site.findOne({ siteId });
+
+    if (!site) {
+      return res.status(404).json({ error: "Site not found" });
+    }
+
+    site.isActive = true;
+    await site.save();
+
+    return res.json({
+      message: "Site enabled successfully",
+      site
+    });
+
+  } catch (err) {
+    console.error("Enable Site error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * 🗑️ DELETE SITE (OWNER ONLY)
+ * DELETE /api/sites/:siteId
+ */
+exports.deleteSite = async (req, res) => {
+  try {
+    const admin = req.admin;
+    const { siteId } = req.params;
+
+    if (admin.role !== "OWNER") {
+      return res.status(403).json({ error: "Only OWNER can delete sites" });
+    }
+
+    const site = await Site.findOne({ siteId });
+
+    if (!site) {
+      return res.status(404).json({ error: "Site not found" });
+    }
+
+    // Delete all sub-sites first
+    await SubSite.deleteMany({ siteId });
+
+    // Delete the site
+    await Site.deleteOne({ siteId });
+
+    return res.json({
+      message: "Site and all sub-sites deleted permanently"
+    });
+
+  } catch (err) {
+    console.error("Delete Site error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };

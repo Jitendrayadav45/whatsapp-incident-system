@@ -15,7 +15,7 @@ const GEMINI_KEY = process.env.GEMINI_API_KEY || null;
  * (avoid experimental names that cause 400/404)
  */
 const GEMINI_MODEL =
-  process.env.GEMINI_MODEL || "gemini-1.5-flash-latest"; // text + vision supported
+  process.env.GEMINI_MODEL || "gemini-1.5-flash"; // text + vision supported
 
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY || null;
 const OPENROUTER_MODEL =

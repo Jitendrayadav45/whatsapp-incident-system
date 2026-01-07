@@ -30,19 +30,52 @@ router.get("/stats", getStats);
 /* 🏭 SITES */
 const {
   getSites,
-  createSite
+  createSite,
+  disableSite,
+  enableSite,
+  deleteSite
 } = require("../controllers/adminSites.controller");
 
 router.get("/sites", getSites);
 router.post("/sites", createSite);
+router.patch("/sites/:siteId/disable", disableSite);
+router.patch("/sites/:siteId/enable", enableSite);
+router.delete("/sites/:siteId", deleteSite);
 
 /* 🏗 SUB-SITES */
 const {
   createSubSite,
-  getSubSitesBySite
+  getSubSitesBySite,
+  disableSubSite,
+  enableSubSite,
+  deleteSubSite
 } = require("../controllers/adminSubSites.controller");
 
 router.get("/sites/:siteId/subsites", getSubSitesBySite);
 router.post("/sites/:siteId/subsites", createSubSite);
+router.patch("/sites/:siteId/subsites/:subSiteId/disable", disableSubSite);
+router.patch("/sites/:siteId/subsites/:subSiteId/enable", enableSubSite);
+router.delete("/sites/:siteId/subsites/:subSiteId", deleteSubSite);
+
+/* 👥 ADMIN MANAGEMENT */
+const {
+  getAdmins,
+  createAdmin,
+  updateAdminStatus,
+  deleteAdmin,
+  resetAdminPassword
+} = require("../controllers/adminManagement.controller");
+
+router.get("/admins", getAdmins);
+router.post("/admins", createAdmin);
+router.patch("/admins/:adminId/status", updateAdminStatus);
+router.delete("/admins/:adminId", deleteAdmin);
+router.patch("/admins/:adminId/reset-password", resetAdminPassword);
+
+/* 📱 QR CODE GENERATION */
+const { generateQRCode } = require("../controllers/adminQR.controller");
+
+router.get("/sites/:siteId/qr", generateQRCode);
+router.get("/sites/:siteId/subsites/:subSiteId/qr", generateQRCode);
 
 module.exports = router;
