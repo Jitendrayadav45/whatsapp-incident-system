@@ -309,6 +309,24 @@ export default function TicketDetail() {
           }}>
             {ticket.message?.text || "No message"}
           </div>
+
+          {ticket.message?.mediaUrl && (
+            <div style={{ marginTop: 16 }}>
+              <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 8, fontWeight: 600, letterSpacing: "0.5px" }}>IMAGE</div>
+              <a
+                href={ticket.message.mediaUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{ display: "inline-block", borderRadius: 12, overflow: "hidden", border: "1px solid rgba(148, 163, 184, 0.3)" }}
+              >
+                <img
+                  src={ticket.message.mediaUrl}
+                  alt="Ticket attachment"
+                  style={{ display: "block", maxWidth: "100%", height: "auto" }}
+                />
+              </a>
+            </div>
+          )}
         </div>
       </div>
 

@@ -15,37 +15,37 @@ export default function StatsCard({ title, value, icon, gradient, subtitle }) {
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = "translateY(-12px) scale(1.03)";
         e.currentTarget.style.boxShadow = "0 20px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.2)";
-        const bg = e.currentTarget.querySelector('.stats-bg-decoration');
-        if (bg) {
-          bg.style.transform = "translate(10px, 10px) scale(1.1) rotate(10deg)";
-          bg.style.opacity = "0.3";
-        }
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = "translateY(0) scale(1)";
         e.currentTarget.style.boxShadow = "0 8px 24px rgba(0, 0, 0, 0.3)";
-        const bg = e.currentTarget.querySelector('.stats-bg-decoration');
-        if (bg) {
-          bg.style.transform = "translate(0, 0) scale(1) rotate(0deg)";
-          bg.style.opacity = "0.2";
-        }
       }}
     >
-      {/* Background decoration with animation */}
-      <div 
-        className="stats-bg-decoration"
-        style={{
-          position: "absolute",
-          top: -30,
-          right: -30,
-          fontSize: 120,
-          opacity: 0.2,
-          transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-          filter: "drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))"
-        }}
-      >
-        {icon || "📊"}
-      </div>
+      {title === "Total Tickets" && (
+        <div
+          style={{
+            position: "absolute",
+            top: 16,
+            right: 16,
+            padding: "10px 14px",
+            borderRadius: 12,
+            background: "linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.18))",
+            border: "1px solid rgba(139, 92, 246, 0.28)",
+            color: "#e2e8f0",
+            fontWeight: 700,
+            fontSize: 13,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            backdropFilter: "blur(6px)",
+            boxShadow: "0 10px 24px rgba(0, 0, 0, 0.25)",
+            zIndex: 2,
+          }}
+        >
+          <span style={{ fontSize: 16 }}>🎟️</span>
+          <span>Live Incident Ticket</span>
+        </div>
+      )}
 
       {/* Glowing effect */}
       <div style={{

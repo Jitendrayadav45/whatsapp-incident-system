@@ -4,5 +4,5 @@ dist
 build
 logs
 .DS_Store
-.scripts
+scripts
 .seed.js

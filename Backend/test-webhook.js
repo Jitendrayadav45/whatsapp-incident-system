@@ -13,9 +13,9 @@ const { receiveMessage } = require("./src/controllers/webhook.controller");
       "value": {
         "messages": [{
           "id": "wamid.TEST_WELCOME",
-          "from": "919999000101",
+          "from": "919999000102",
           "type": "text",
-          "text": { "body": "SITE:GITA Oil leakage near machine" }
+          "text": { "body": "SITE:GITB Oil leakage near machine" }
         }]
       }
     }]

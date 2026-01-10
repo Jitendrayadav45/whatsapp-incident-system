@@ -7,6 +7,7 @@ const IOGP_RULES = require("../constants/iogpRules");
  * 🔧 CONFIG (SAFE DEFAULTS)
  * =====================================================
  */
+const AI_PROVIDER = (process.env.AI_PROVIDER || "auto").toLowerCase();
 const GEMINI_KEY = process.env.GEMINI_API_KEY || null;
 
 /**
@@ -14,42 +15,83 @@ const GEMINI_KEY = process.env.GEMINI_API_KEY || null;
  * Free / stable Gemini text model that actually works with generateContent
  * (avoid experimental names that cause 400/404)
  */
-const GEMINI_MODEL =
-  process.env.GEMINI_MODEL || "gemini-1.5-flash"; // text + vision supported
+const GEMINI_MODEL = normalizeGeminiModel(process.env.GEMINI_MODEL);
 
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY || null;
 const OPENROUTER_MODEL =
   process.env.OPENROUTER_MODEL || "gpt-3.5-turbo"; // free & stable
 
-const genAI = GEMINI_KEY ? new GoogleGenerativeAI(GEMINI_KEY) : null;
+// Force v1 to avoid v1beta model path 404s for vision-capable models
+const genAI = GEMINI_KEY
+  ? new GoogleGenerativeAI({ apiKey: GEMINI_KEY, apiVersion: "v1" })
+  : null;
+
+function normalizeGeminiModel(raw) {
+  if (!raw) return "gemini-1.5-flash";
+
+  const trimmed = raw.trim().replace(/\.$/, "");
+  const allowed = new Set([
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-001",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-pro",
+    "gemini-1.5-pro-001",
+    "gemini-1.5-pro-latest",
+    "gemini-1.5-flash-8b",
+    "gemini-2.0-flash-exp"
+  ]);
+
+  // If user passes a full path like "google/gemini-3-pro-preview" or other unsupported name, fall back.
+  if (allowed.has(trimmed)) return trimmed;
+  if (trimmed.includes("/") || trimmed.includes(":")) return "gemini-1.5-flash";
+
+  return "gemini-1.5-flash-latest"; // conservative default with stable alias
+}
 
 /**
  * =====================================================
  * 🧠 MAIN ENTRY (Gemini → OpenRouter fallback)
  * =====================================================
  */
-async function analyzeSafety({ imageBase64, text, siteType }) {
+async function analyzeSafety({ imageBase64, imageMimeType, text, siteType }) {
   if (!text && !imageBase64) return null;
 
+  const contentType = imageBase64 && text
+    ? "image+text"
+    : imageBase64
+    ? "image-only"
+    : "text-only";
+
   // 1️⃣ Try Gemini first
-  if (genAI) {
+  if (genAI && AI_PROVIDER !== "openrouter") {
     const geminiResult = await analyzeWithGemini({
       imageBase64,
+      imageMimeType,
       text,
-      siteType
+      siteType,
+      contentType
     });
 
-    if (geminiResult) return geminiResult;
+    if (geminiResult) {
+      geminiResult.content_type = geminiResult.content_type || contentType;
+      return geminiResult;
+    }
   }
 
   // 2️⃣ Fallback to OpenRouter (TEXT ONLY)
   if (OPENROUTER_KEY && text) {
     const openRouterResult = await analyzeWithOpenRouter({
+      imageBase64,
+      imageMimeType,
       text,
-      siteType
+      siteType,
+      contentType
     });
 
-    if (openRouterResult) return openRouterResult;
+    if (openRouterResult) {
+      openRouterResult.content_type = openRouterResult.content_type || contentType;
+      return openRouterResult;
+    }
   }
 
   return null; // advisory only
@@ -60,17 +102,17 @@ async function analyzeSafety({ imageBase64, text, siteType }) {
  * 🔵 GEMINI ANALYSIS (TEXT / IMAGE)
  * =====================================================
  */
-async function analyzeWithGemini({ imageBase64, text, siteType }) {
+async function analyzeWithGemini({ imageBase64, imageMimeType, text, siteType, contentType }) {
   try {
     const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
-    const prompt = buildPrompt({ text, siteType });
+    const prompt = buildPrompt({ text, siteType, contentType });
 
     const parts = [];
 
     if (imageBase64) {
       parts.push({
         inlineData: {
-          mimeType: "image/jpeg",
+          mimeType: imageMimeType || "image/jpeg",
           data: imageBase64
         }
       });
@@ -94,9 +136,20 @@ async function analyzeWithGemini({ imageBase64, text, siteType }) {
  * 🟣 OPENROUTER FALLBACK (TEXT ONLY)
  * =====================================================
  */
-async function analyzeWithOpenRouter({ text, siteType }) {
+async function analyzeWithOpenRouter({ imageBase64, imageMimeType, text, siteType, contentType }) {
   try {
-    const prompt = buildPrompt({ text, siteType });
+    const prompt = buildPrompt({ text, siteType, contentType });
+
+    const userContent = [];
+    if (imageBase64) {
+      userContent.push({
+        type: "image_url",
+        image_url: {
+          url: `data:${imageMimeType || "image/jpeg"};base64,${imageBase64}`
+        }
+      });
+    }
+    userContent.push({ type: "text", text: prompt });
 
     const res = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
@@ -110,17 +163,18 @@ async function analyzeWithOpenRouter({ text, siteType }) {
           },
           {
             role: "user",
-            content: prompt
+            content: userContent
           }
         ],
-        temperature: 0.2
+        temperature: 0.2,
+        response_format: { type: "json_object" }
       },
       {
         headers: {
           Authorization: `Bearer ${OPENROUTER_KEY}`,
           "Content-Type": "application/json"
         },
-        timeout: 10000
+        timeout: 20000
       }
     );
 
@@ -138,7 +192,7 @@ async function analyzeWithOpenRouter({ text, siteType }) {
  * 🧾 PROMPT BUILDER (SHARED)
  * =====================================================
  */
-function buildPrompt({ text, siteType }) {
+function buildPrompt({ text, siteType, contentType }) {
   return `
 You are a Safety Mentor AI trained on IOGP Life-Saving Rules.
 
@@ -150,7 +204,17 @@ Rules:
 - Focus on injury prevention
 - Respond ONLY in valid JSON
 
+Critical prioritization guidance (use this order when both appear plausible):
+1) Line of Fire / Struck-by / Suspended Load: if any person is under/near suspended loads, swinging loads, chains, rigging, dropped-object exposure. Always prefer this over Working at Height when the main hazard is being hit or crushed.
+2) Energy Isolation / Mechanical: unguarded moving parts, entanglement with chains/shafts/gears, pinch points.
+3) Working at Height: only when the person is elevated and could fall; do NOT choose this if the person is on ground near a suspended load.
+4) Lifting Operations: rigging, hoisting, crane operations without direct struck-by exposure.
+5) PPE issues: only if no higher-risk hazard is present.
+
+If both image and text are provided, first understand the image, then the text, then state whether the text matches what is visible in the image.
+
 Site type: ${siteType}
+Content type: ${contentType}
 
 User observation:
 "${text || "No text provided"}"
@@ -166,7 +230,10 @@ Respond in JSON format:
   "observation_summary": string,
   "why_this_is_dangerous": string,
   "mentor_precautions": string[],
-  "confidence": number
+  "confidence": number,
+  "text_image_aligned": boolean,
+  "alignment_reason": string,
+  "content_type": "text-only" | "image-only" | "image+text"
 }
 `;
 }
@@ -184,9 +251,23 @@ function safeJsonParse(text) {
     .replace(/```/g, "")
     .trim();
 
+  // Try direct parse first
   try {
     return JSON.parse(cleaned);
-  } catch (err) {
+  } catch (_) {
+    // Try to extract the first JSON object from mixed text
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+    if (start !== -1 && end !== -1 && end > start) {
+      const slice = cleaned.substring(start, end + 1);
+      try {
+        return JSON.parse(slice);
+      } catch (err2) {
+        console.error("❌ AI JSON parse failed after slice:", slice);
+        return null;
+      }
+    }
+
     console.error("❌ AI JSON parse failed:", cleaned);
     return null;
   }

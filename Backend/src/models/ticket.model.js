@@ -37,6 +37,7 @@ const ticketSchema = new mongoose.Schema(
       text: String,
       mediaId: String,
       mimeType: String,
+      mediaUrl: String,
     },
 
     /* ============================
@@ -81,6 +82,9 @@ const ticketSchema = new mongoose.Schema(
       whyThisIsDangerous: String,
       mentorPrecautions: [String],
       confidence: Number,
+      textImageAligned: Boolean,
+      alignmentReason: String,
+      contentType: String, // text-only | image-only | image+text
       analyzedAt: {
         type: Date,
         default: Date.now,

@@ -14,6 +14,12 @@ export default function TicketCard({ ticket, onClick, rightMeta }) {
 
       <p>{ticket.message?.text || "No message"}</p>
 
+      {ticket.message?.mediaUrl && (
+        <div style={{ marginTop: 6, fontSize: 12, color: "#60a5fa" }}>
+          📷 Image attached
+        </div>
+      )}
+
       <div style={{ display: "flex", gap: 14, marginTop: 8 }}>
         <small>
           📍 {ticket.siteId}

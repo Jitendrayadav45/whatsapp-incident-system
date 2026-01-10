@@ -6,6 +6,7 @@ const MESSAGES = require("../messages/whatsappMessages");
 const { analyzeSafety } = require("../services/safetyAI.service");
 const { fetchWhatsAppMedia } = require("../services/whatsappMedia.service");
 const { validateSiteContext } = require("../services/siteValidation.service");
+const { uploadImageBase64 } = require("../services/cloudinary.service");
 
 /**
  * 🔹 Webhook Verification
@@ -113,9 +114,36 @@ exports.receiveMessage = async (req, res) => {
     /* ✂️ Clean issue text AFTER site validation */
     payload.text = cleanMessageText(rawText);
 
+    // Allow image-only reports (with SITE/SUB) by injecting a placeholder text
     if (!payload.text || payload.text.length < 3) {
-      await sendWhatsAppReply(sender, MESSAGES.ISSUE_TOO_SHORT_MESSAGE);
-      return res.sendStatus(200);
+      if (type === "image" && payload.mediaId) {
+        payload.text = "(no text provided; image-only report)";
+      } else {
+        await sendWhatsAppReply(sender, MESSAGES.ISSUE_TOO_SHORT_MESSAGE);
+        return res.sendStatus(200);
+      }
+    }
+
+    // Fetch media early (needed for Cloudinary + AI) if image
+    let imageBase64 = null;
+    let imageMimeType = payload.mimeType || null;
+
+    if (type === "image" && payload.mediaId) {
+      const media = await fetchWhatsAppMedia(payload.mediaId);
+      if (media?.base64) imageBase64 = media.base64;
+      if (media?.mimeType) imageMimeType = media.mimeType;
+
+      try {
+        const uploaded = await uploadImageBase64({
+          base64: media?.base64,
+          mimeType: media?.mimeType
+        });
+        if (uploaded?.url) {
+          payload.mediaUrl = uploaded.url;
+        }
+      } catch (upErr) {
+        console.error("Cloudinary upload failed:", upErr.message);
+      }
     }
 
     /* 🔁 SOFT DUPLICATE DETECTION */
@@ -161,15 +189,9 @@ exports.receiveMessage = async (req, res) => {
 
     /* 🤖 AI SAFETY ANALYSIS (DB FIRST, MESSAGE LATER) */
     try {
-      let imageBase64 = null;
-
-      if (type === "image" && payload.mediaId) {
-        const media = await fetchWhatsAppMedia(payload.mediaId);
-        if (media?.base64) imageBase64 = media.base64;
-      }
-
       const aiResult = await analyzeSafety({
         imageBase64,
+        imageMimeType,
         text: payload.text,
         siteType: "industrial site"
       });
@@ -182,7 +204,10 @@ exports.receiveMessage = async (req, res) => {
           observationSummary: aiResult.observation_summary,
           whyThisIsDangerous: aiResult.why_this_is_dangerous,
           mentorPrecautions: aiResult.mentor_precautions || [],
-          confidence: aiResult.confidence
+          confidence: aiResult.confidence,
+          textImageAligned: aiResult.text_image_aligned,
+          alignmentReason: aiResult.alignment_reason,
+          contentType: aiResult.content_type
         });
 
         if (aiResult.life_saving_rule_violated) {

@@ -399,7 +399,6 @@ export default function CreateAdmin() {
                 border: "1px solid rgba(226, 232, 240, 0.08)"
               }}>
                 <label style={{
-                  display: "block",
                   fontSize: 14,
                   fontWeight: 600,
                   color: "#94a3b8",
@@ -507,7 +506,6 @@ export default function CreateAdmin() {
                   </div>
                 )}
                 <label style={{
-                  display: "block",
                   fontSize: 14,
                   fontWeight: 600,
                   color: "#94a3b8",

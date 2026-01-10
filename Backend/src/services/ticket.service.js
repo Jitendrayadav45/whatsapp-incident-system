@@ -98,7 +98,10 @@ async function attachAIAnalysis(ticketId, aiAnalysis) {
           observationSummary: aiAnalysis.observationSummary,
           whyThisIsDangerous: aiAnalysis.whyThisIsDangerous,
           mentorPrecautions: aiAnalysis.mentorPrecautions || [],
-          confidence: aiAnalysis.confidence
+          confidence: aiAnalysis.confidence,
+          textImageAligned: aiAnalysis.textImageAligned,
+          alignmentReason: aiAnalysis.alignmentReason,
+          contentType: aiAnalysis.contentType
         }
       }
     }
