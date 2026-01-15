@@ -8,7 +8,7 @@ import { ROLES } from "../utils/constants";
 import AdminLayout from "../layouts/AdminLayout";
 
 /* Pages */
-import Login from "../pages/auth/Login";
+import Login from "../pages/auth/login";
 import Dashboard from "../pages/dashboard/Dashboard";
 import TicketList from "../pages/tickets/TicketList";
 import TicketDetail from "../pages/tickets/TicketDetail";
