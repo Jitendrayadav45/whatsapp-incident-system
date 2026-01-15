@@ -6,14 +6,18 @@ const adminRoutes = require("./src/routes/admin.routes");
 const webhookRoutes = require("./src/routes/webhook.routes");
 
 const app = express();
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-    methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-  })
-);
+
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',') 
+  : ['http://localhost:5173', 'https://whatsapp-incident-system.vercel.app'];
+
+const corsOptions = {
+  origin: allowedOrigins,
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 
 // Increase body parser limits for large base64 images
 app.use(express.json({ limit: "50mb" }));
