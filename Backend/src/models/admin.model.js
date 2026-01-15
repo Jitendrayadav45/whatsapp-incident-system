@@ -40,11 +40,11 @@ const adminSchema = new mongoose.Schema(
       index: true
     },
 
-    /** 👇 AUDIT OWNER */
+    /**  AUDIT OWNER */
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Admin",
-      default: null // OWNER ke liye null
+      default: null 
     },
 
     isActive: {

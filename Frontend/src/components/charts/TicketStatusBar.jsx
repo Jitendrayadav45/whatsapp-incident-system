@@ -11,7 +11,8 @@ export default function TicketStatusBar({ stats }) {
   const data = [
     { name: "Open", value: stats.open },
     { name: "In Progress", value: stats.inProgress },
-    { name: "Resolved", value: stats.resolved }
+    { name: "Resolved", value: stats.resolved },
+    { name: "Closed", value: stats.closed || 0 }
   ];
 
   return (

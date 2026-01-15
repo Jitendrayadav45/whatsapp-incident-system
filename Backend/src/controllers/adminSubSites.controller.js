@@ -2,7 +2,7 @@ const Site = require("../models/site.model");
 const SubSite = require("../models/subSite.model");
 
 /**
- * ✅ CREATE SUB-SITE
+ *  CREATE SUB-SITE
  * OWNER → any site
  * SITE_ADMIN → own site only
  */
@@ -61,7 +61,7 @@ exports.createSubSite = async (req, res) => {
 };
 
 /**
- * 📋 GET SUB-SITES OF SITE
+ *  GET SUB-SITES OF SITE
  */
 exports.getSubSitesBySite = async (req, res) => {
   try {
@@ -89,7 +89,7 @@ exports.getSubSitesBySite = async (req, res) => {
 };
 
 /**
- * ⛔ DISABLE SUB-SITE (OWNER / SITE_ADMIN)
+ *  DISABLE SUB-SITE (OWNER / SITE_ADMIN)
  * PATCH /api/sites/:siteId/subsites/:subSiteId/disable
  */
 exports.disableSubSite = async (req, res) => {
@@ -130,7 +130,7 @@ exports.disableSubSite = async (req, res) => {
 };
 
 /**
- * ✅ ENABLE SUB-SITE (OWNER / SITE_ADMIN)
+ *  ENABLE SUB-SITE (OWNER / SITE_ADMIN)
  * PATCH /api/sites/:siteId/subsites/:subSiteId/enable
  */
 exports.enableSubSite = async (req, res) => {
@@ -171,7 +171,7 @@ exports.enableSubSite = async (req, res) => {
 };
 
 /**
- * 🗑️ DELETE SUB-SITE (OWNER / SITE_ADMIN)
+ *  DELETE SUB-SITE (OWNER / SITE_ADMIN)
  * DELETE /api/sites/:siteId/subsites/:subSiteId
  */
 exports.deleteSubSite = async (req, res) => {

@@ -2,57 +2,33 @@ const axios = require("axios");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const IOGP_RULES = require("../constants/iogpRules");
 
-/**
- * =====================================================
- * 🔧 CONFIG (SAFE DEFAULTS)
- * =====================================================
- */
 const AI_PROVIDER = (process.env.AI_PROVIDER || "auto").toLowerCase();
 const GEMINI_KEY = process.env.GEMINI_API_KEY || null;
 
-/**
- * IMPORTANT:
- * Free / stable Gemini text model that actually works with generateContent
- * (avoid experimental names that cause 400/404)
- */
 const GEMINI_MODEL = normalizeGeminiModel(process.env.GEMINI_MODEL);
 
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY || null;
 const OPENROUTER_MODEL =
-  process.env.OPENROUTER_MODEL || "gpt-3.5-turbo"; // free & stable
+  process.env.OPENROUTER_MODEL || "meta-llama/Llama-3.2-11B-Vision-Instruct";
 
-// Force v1 to avoid v1beta model path 404s for vision-capable models
 const genAI = GEMINI_KEY
-  ? new GoogleGenerativeAI({ apiKey: GEMINI_KEY, apiVersion: "v1" })
+  ? new GoogleGenerativeAI(GEMINI_KEY) 
   : null;
 
 function normalizeGeminiModel(raw) {
-  if (!raw) return "gemini-1.5-flash";
+
+  if (!raw) return "gemini-2.5-flash";
 
   const trimmed = raw.trim().replace(/\.$/, "");
-  const allowed = new Set([
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-001",
-    "gemini-1.5-flash-latest",
-    "gemini-1.5-pro",
-    "gemini-1.5-pro-001",
-    "gemini-1.5-pro-latest",
-    "gemini-1.5-flash-8b",
-    "gemini-2.0-flash-exp"
-  ]);
-
-  // If user passes a full path like "google/gemini-3-pro-preview" or other unsupported name, fall back.
-  if (allowed.has(trimmed)) return trimmed;
-  if (trimmed.includes("/") || trimmed.includes(":")) return "gemini-1.5-flash";
-
-  return "gemini-1.5-flash-latest"; // conservative default with stable alias
+  
+  // Only allow gemini-2.5-flash
+  if (trimmed === "gemini-2.5-flash") return trimmed;
+  return "gemini-2.5-flash";
 }
 
-/**
- * =====================================================
- * 🧠 MAIN ENTRY (Gemini → OpenRouter fallback)
- * =====================================================
- */
+
+//   MAIN ENTRY (Gemini → OpenRouter fallback)
+
 async function analyzeSafety({ imageBase64, imageMimeType, text, siteType }) {
   if (!text && !imageBase64) return null;
 
@@ -62,7 +38,7 @@ async function analyzeSafety({ imageBase64, imageMimeType, text, siteType }) {
     ? "image-only"
     : "text-only";
 
-  // 1️⃣ Try Gemini first
+  //  Try Gemini first
   if (genAI && AI_PROVIDER !== "openrouter") {
     const geminiResult = await analyzeWithGemini({
       imageBase64,
@@ -78,7 +54,7 @@ async function analyzeSafety({ imageBase64, imageMimeType, text, siteType }) {
     }
   }
 
-  // 2️⃣ Fallback to OpenRouter (TEXT ONLY)
+  // Fallback to OpenRouter (TEXT ONLY)
   if (OPENROUTER_KEY && text) {
     const openRouterResult = await analyzeWithOpenRouter({
       imageBase64,
@@ -97,11 +73,7 @@ async function analyzeSafety({ imageBase64, imageMimeType, text, siteType }) {
   return null; // advisory only
 }
 
-/**
- * =====================================================
- * 🔵 GEMINI ANALYSIS (TEXT / IMAGE)
- * =====================================================
- */
+//   GEMINI ANALYSIS (TEXT / IMAGE)
 async function analyzeWithGemini({ imageBase64, imageMimeType, text, siteType, contentType }) {
   try {
     const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
@@ -131,11 +103,7 @@ async function analyzeWithGemini({ imageBase64, imageMimeType, text, siteType, c
   }
 }
 
-/**
- * =====================================================
- * 🟣 OPENROUTER FALLBACK (TEXT ONLY)
- * =====================================================
- */
+// OPENROUTER FALLBACK (TEXT ONLY)
 async function analyzeWithOpenRouter({ imageBase64, imageMimeType, text, siteType, contentType }) {
   try {
     const prompt = buildPrompt({ text, siteType, contentType });
@@ -187,11 +155,7 @@ async function analyzeWithOpenRouter({ imageBase64, imageMimeType, text, siteTyp
   }
 }
 
-/**
- * =====================================================
- * 🧾 PROMPT BUILDER (SHARED)
- * =====================================================
- */
+//   PROMPT BUILDER
 function buildPrompt({ text, siteType, contentType }) {
   return `
 You are a Safety Mentor AI trained on IOGP Life-Saving Rules.
@@ -238,11 +202,7 @@ Respond in JSON format:
 `;
 }
 
-/**
- * =====================================================
- * 🛡️ SAFE JSON PARSER (CRITICAL FIX)
- * =====================================================
- */
+//   SAFE JSON PARSER
 function safeJsonParse(text) {
   if (!text) return null;
 

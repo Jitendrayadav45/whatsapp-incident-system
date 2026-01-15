@@ -1,17 +1,6 @@
 const axios = require("axios");
 
-/**
- * 📸 Fetch WhatsApp Media (Image / Video / Document)
- * -----------------------------------------------
- * Returns:
- * {
- *   base64: string,
- *   mimeType: string,
- *   size: number | null
- * }
- *
- * ❗ NEVER throws fatal error
- */
+// Fetch WhatsApp Media (Image / Video / Document)
 async function fetchWhatsAppMedia(mediaId) {
   if (!mediaId) return null;
 
@@ -19,7 +8,7 @@ async function fetchWhatsAppMedia(mediaId) {
   if (!token) return null;
 
   try {
-    // 1️⃣ Fetch metadata
+    // Fetch metadata
     const metaRes = await axios.get(
       `https://graph.facebook.com/v19.0/${mediaId}`,
       {
@@ -30,7 +19,7 @@ async function fetchWhatsAppMedia(mediaId) {
 
     if (!metaRes.data?.url) return null;
 
-    // 2️⃣ Download binary
+    // Download binary
     const binaryRes = await axios.get(metaRes.data.url, {
       responseType: "arraybuffer",
       headers: { Authorization: `Bearer ${token}` },
@@ -38,7 +27,7 @@ async function fetchWhatsAppMedia(mediaId) {
       maxContentLength: 10 * 1024 * 1024
     });
 
-    // 3️⃣ Convert to base64
+    // Convert to base64
     return {
       base64: Buffer.from(binaryRes.data).toString("base64"),
       mimeType: metaRes.data.mime_type || "application/octet-stream",

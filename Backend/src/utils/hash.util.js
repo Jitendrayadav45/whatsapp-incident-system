@@ -6,5 +6,3 @@ module.exports = function hashPhone(phone) {
     .update(phone + process.env.HASH_SALT)
     .digest("hex");
 };
-
-// console.log(hashPhone("1234567890"));

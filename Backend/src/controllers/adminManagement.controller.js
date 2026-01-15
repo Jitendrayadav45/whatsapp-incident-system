@@ -2,7 +2,7 @@ const Admin = require("../models/admin.model");
 const bcrypt = require("bcryptjs");
 
 /**
- * ✅ GET ALL ADMINS
+ * GET ALL ADMINS
  * OWNER → all admins
  * SITE_ADMIN → admins in their sites only
  */
@@ -32,7 +32,7 @@ exports.getAdmins = async (req, res) => {
 };
 
 /**
- * ✅ CREATE ADMIN
+ * CREATE ADMIN
  * OWNER → can create SITE_ADMIN and SUB_SITE_ADMIN
  * SITE_ADMIN → can create SUB_SITE_ADMIN in their sites only
  */
@@ -101,7 +101,7 @@ exports.createAdmin = async (req, res) => {
 };
 
 /**
- * ✅ UPDATE ADMIN STATUS (ACTIVATE/DEACTIVATE)
+ *  UPDATE ADMIN STATUS (ACTIVATE/DEACTIVATE)
  * OWNER → can update any admin
  * SITE_ADMIN → can update admins in their sites only
  */
@@ -148,7 +148,7 @@ exports.updateAdminStatus = async (req, res) => {
 };
 
 /**
- * ✅ DELETE ADMIN
+ * DELETE ADMIN
  * OWNER → can delete any admin (except other owners)
  */
 exports.deleteAdmin = async (req, res) => {
@@ -188,7 +188,7 @@ exports.deleteAdmin = async (req, res) => {
 };
 
 /**
- * ✅ RESET ADMIN PASSWORD
+ *  RESET ADMIN PASSWORD
  * OWNER → can reset password for any admin (except other owners)
  */
 exports.resetAdminPassword = async (req, res) => {

@@ -1,7 +1,7 @@
 import StatusBadge from "./StatusBadge";
 import { formatDateTime } from "../../utils/formatDate";
 
-export default function TicketCard({ ticket, onClick, rightMeta }) {
+export default function TicketCard({ ticket, onClick, rightMeta, actions }) {
   return (
     <div className="ticket-card" onClick={onClick}>
       <div className="row">
@@ -9,6 +9,7 @@ export default function TicketCard({ ticket, onClick, rightMeta }) {
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           {rightMeta}
           <StatusBadge status={ticket.status} />
+          {actions}
         </div>
       </div>
 

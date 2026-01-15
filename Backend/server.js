@@ -14,7 +14,10 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
-app.use(express.json());
+
+// Increase body parser limits for large base64 images
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // DB connect
 connectDB();

@@ -1,4 +1,3 @@
-// src/components/admins/CreateAdminForm.jsx
 import { useState } from "react";
 import { createAdmin } from "../../api/admins.api";
 import { useAuth } from "../../auth/useAuth";

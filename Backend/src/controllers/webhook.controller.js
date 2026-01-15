@@ -1,7 +1,6 @@
 const ticketService = require("../services/ticket.service");
 const { sendWhatsAppReply } = require("../services/whatsapp.service");
 const { extractSiteContext, cleanMessageText } = require("../utils/site.parser");
-const hashPhone = require("../utils/hash.util");
 const MESSAGES = require("../messages/whatsappMessages");
 const { analyzeSafety } = require("../services/safetyAI.service");
 const { fetchWhatsAppMedia } = require("../services/whatsappMedia.service");
@@ -9,7 +8,7 @@ const { validateSiteContext } = require("../services/siteValidation.service");
 const { uploadImageBase64 } = require("../services/cloudinary.service");
 
 /**
- * 🔹 Webhook Verification
+ *  Webhook Verification
  */
 exports.verifyWebhook = (req, res) => {
   if (
@@ -22,7 +21,7 @@ exports.verifyWebhook = (req, res) => {
 };
 
 /**
- * 🔹 WhatsApp Receiver (PRODUCTION)
+ *  WhatsApp Receiver (PRODUCTION)
  */
 exports.receiveMessage = async (req, res) => {
   let sender = null;
@@ -36,12 +35,12 @@ exports.receiveMessage = async (req, res) => {
     const { from, type, id: waMessageId } = message;
     sender = from;
 
-    /* 🔁 HARD DUPLICATE GUARD */
+    /*  HARD DUPLICATE GUARD */
     if (await ticketService.isDuplicateMessage(waMessageId)) {
       return res.sendStatus(200);
     }
 
-    /* 📦 Normalize payload */
+    /*  Normalize payload */
     const payload = { type, text: null, mediaId: null, mimeType: null };
 
     if (type === "text") payload.text = message.text.body;
@@ -64,7 +63,7 @@ exports.receiveMessage = async (req, res) => {
       payload.text = message.document.filename || null;
     }
 
-    /* 🔎 STATUS COMMAND */
+    /*  STATUS COMMAND */
     if (type === "text" && payload.text) {
       const match = payload.text.trim().match(/^status\s+(TKT-\d+-\d+)$/i);
       if (match) {
@@ -79,7 +78,7 @@ exports.receiveMessage = async (req, res) => {
       }
     }
 
-    /* 👋 MVP WELCOME FLOW (SAFE) */
+    /*  MVP WELCOME FLOW (SAFE) */
     if (type === "text" && payload.text) {
       const text = payload.text.trim().toLowerCase();
 
@@ -99,11 +98,11 @@ exports.receiveMessage = async (req, res) => {
       }
     }
 
-    /* 🧩 SITE EXTRACTION */
+    /*  SITE EXTRACTION */
     const rawText = payload.text || "";
     const { siteId, subSiteId } = extractSiteContext(rawText);
 
-    /* 🔐 AUTHORITATIVE SITE VALIDATION (NEW – CRITICAL) */
+    /*  AUTHORITATIVE SITE VALIDATION (NEW – CRITICAL) */
     const siteCheck = await validateSiteContext({ siteId, subSiteId });
 
     if (!siteCheck.valid) {
@@ -111,7 +110,7 @@ exports.receiveMessage = async (req, res) => {
       return res.sendStatus(200);
     }
 
-    /* ✂️ Clean issue text AFTER site validation */
+    /*  Clean issue text AFTER site validation */
     payload.text = cleanMessageText(rawText);
 
     // Allow image-only reports (with SITE/SUB) by injecting a placeholder text
@@ -146,16 +145,16 @@ exports.receiveMessage = async (req, res) => {
       }
     }
 
-    /* 🔁 SOFT DUPLICATE DETECTION */
+    /*  SOFT DUPLICATE DETECTION */
     const duplicateTicket = await ticketService.findRecentSimilarTicket({
-      phoneHash: hashPhone(sender),
+      phone: sender,
       siteId,
       subSiteId,
       messageText: payload.text,
       minutes: 30
     });
 
-    /* 🎫 CREATE TICKET (SYSTEM OF RECORD) */
+    /*  CREATE TICKET (SYSTEM OF RECORD) */
     const ticket = await ticketService.createTicket({
       phone: sender,
       waMessageId,
@@ -166,7 +165,7 @@ exports.receiveMessage = async (req, res) => {
       duplicateScore: duplicateTicket ? 0.8 : null
     });
 
-    /* 📤 USER CONFIRMATION */
+    /*  USER CONFIRMATION */
     if (duplicateTicket) {
       await sendWhatsAppReply(
         sender,
@@ -187,7 +186,7 @@ exports.receiveMessage = async (req, res) => {
       );
     }
 
-    /* 🤖 AI SAFETY ANALYSIS (DB FIRST, MESSAGE LATER) */
+    /*  AI SAFETY ANALYSIS (DB FIRST, MESSAGE LATER) */
     try {
       const aiResult = await analyzeSafety({
         imageBase64,
@@ -210,6 +209,7 @@ exports.receiveMessage = async (req, res) => {
           contentType: aiResult.content_type
         });
 
+        // Send AI feedback to user (both violation and no-violation cases)
         if (aiResult.life_saving_rule_violated) {
           await sendWhatsAppReply(
             sender,
@@ -218,6 +218,15 @@ exports.receiveMessage = async (req, res) => {
               whyThisIsDangerous: aiResult.why_this_is_dangerous,
               mentorPrecautions: aiResult.mentor_precautions
             }) + MESSAGES.FOOTER_MESSAGE
+          );
+        } else {
+          // No violation detected - send safe confirmation
+          await sendWhatsAppReply(
+            sender,
+            MESSAGES.AI_SAFE_MESSAGE({
+              observationSummary: aiResult.observation_summary,
+              riskLevel: aiResult.risk_level
+            })
           );
         }
       }

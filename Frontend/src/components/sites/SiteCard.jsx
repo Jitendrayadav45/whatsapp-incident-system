@@ -12,6 +12,13 @@ export default function SiteCard({ site, onRefresh }) {
 
   const canManageSite = user.role === ROLES.OWNER;
   const canManageSubSite = user.role === ROLES.OWNER || user.role === ROLES.SITE_ADMIN;
+  // Site QR only for owner/site admin; sub-site admins see only sub-site QR
+  const canViewSiteQR = [ROLES.OWNER, ROLES.SITE_ADMIN].includes(user.role);
+  const canViewSubSiteQR = [ROLES.OWNER, ROLES.SITE_ADMIN, ROLES.SUB_SITE_ADMIN].includes(user.role);
+
+  const visibleSubSites = user.role === ROLES.SUB_SITE_ADMIN
+    ? site.subSites?.filter((sub) => user.allowedSubSites?.includes(sub.subSiteId))
+    : site.subSites;
 
   function showConfirmDialog(message, onConfirm, type = "info") {
     setConfirmDialog({ show: true, message, onConfirm, type });
@@ -180,113 +187,120 @@ export default function SiteCard({ site, onRefresh }) {
           </div>
         </div>
 
-        {canManageSite && (
+        {canViewSiteQR || canManageSite ? (
           <div style={{ display: "flex", gap: 12 }}>
-            <button
-              onClick={() => showQRModal(site)}
-              style={{ 
-                fontSize: 15,
-                padding: "12px 24px",
-                fontWeight: 700,
-                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                color: "#fff",
-                border: "none",
-                borderRadius: "10px",
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-                boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px"
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px) scale(1.02)";
-                e.currentTarget.style.boxShadow = "0 6px 20px rgba(16, 185, 129, 0.5), 0 0 30px rgba(16, 185, 129, 0.3)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0) scale(1)";
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
-              }}
-            >
-              <span style={{ fontSize: "18px" }}>📱</span>
-              <span>QR Code</span>
-            </button>
-            <button
-              className={site.isActive ? "btn btn-outline" : "btn btn-primary"}
-              disabled={loading}
-              onClick={handleToggleSite}
-              style={{ 
-                fontSize: 15,
-                padding: "12px 24px",
-                fontWeight: 600,
-                transition: "all 0.2s ease",
-                cursor: loading ? "not-allowed" : "pointer",
-                opacity: loading ? 0.6 : 1
-              }}
-              onMouseEnter={(e) => {
-                if (!loading) {
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  if (site.isActive) {
-                    e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)";
-                    e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.6)";
-                    e.currentTarget.style.color = "#fca5a5";
-                    e.currentTarget.style.boxShadow = "0 8px 24px rgba(239, 68, 68, 0.3)";
-                  } else {
-                    e.currentTarget.style.boxShadow = "0 8px 24px rgba(59, 130, 246, 0.4)";
-                  }
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!loading) {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = site.isActive ? "none" : "0 12px 28px rgba(37, 99, 235, 0.28)";
-                  if (site.isActive) {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.4)";
-                    e.currentTarget.style.color = "#60a5fa";
-                  }
-                }
-              }}
-            >
-              {site.isActive ? "🔴 Disable" : "✅ Enable"}
-            </button>
-            <button
-              className="btn btn-outline"
-              disabled={loading}
-              onClick={handleDeleteSite}
-              style={{ 
-                fontSize: 15,
-                padding: "12px 24px",
-                fontWeight: 600,
-                borderColor: "rgba(239, 68, 68, 0.4)",
-                color: "#f87171",
-                transition: "all 0.2s ease",
-                cursor: loading ? "not-allowed" : "pointer",
-                opacity: loading ? 0.6 : 1
-              }}
-              onMouseEnter={(e) => {
-                if (!loading) {
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
-                  e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.7)";
-                  e.currentTarget.style.color = "#fca5a5";
-                  e.currentTarget.style.boxShadow = "0 8px 24px rgba(239, 68, 68, 0.4)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!loading) {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.4)";
-                  e.currentTarget.style.color = "#f87171";
-                  e.currentTarget.style.boxShadow = "none";
-                }
-              }}
-            >
-              🗑️ Delete
-            </button>
+            {canViewSiteQR && (
+              <button
+                onClick={() => showQRModal(site)}
+                style={{ 
+                  fontSize: 15,
+                  padding: "12px 24px",
+                  fontWeight: 700,
+                  background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                  boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px) scale(1.02)";
+                  e.currentTarget.style.boxShadow = "0 6px 20px rgba(16, 185, 129, 0.5), 0 0 30px rgba(16, 185, 129, 0.3)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0) scale(1)";
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
+                }}
+              >
+                <span style={{ fontSize: "18px" }}>📱</span>
+                <span>QR Code</span>
+              </button>
+            )}
+
+            {canManageSite && (
+              <>
+                <button
+                  className={site.isActive ? "btn btn-outline" : "btn btn-primary"}
+                  disabled={loading}
+                  onClick={handleToggleSite}
+                  style={{ 
+                    fontSize: 15,
+                    padding: "12px 24px",
+                    fontWeight: 600,
+                    transition: "all 0.2s ease",
+                    cursor: loading ? "not-allowed" : "pointer",
+                    opacity: loading ? 0.6 : 1
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      if (site.isActive) {
+                        e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)";
+                        e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.6)";
+                        e.currentTarget.style.color = "#fca5a5";
+                        e.currentTarget.style.boxShadow = "0 8px 24px rgba(239, 68, 68, 0.3)";
+                      } else {
+                        e.currentTarget.style.boxShadow = "0 8px 24px rgba(59, 130, 246, 0.4)";
+                      }
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = site.isActive ? "none" : "0 12px 28px rgba(37, 99, 235, 0.28)";
+                      if (site.isActive) {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.4)";
+                        e.currentTarget.style.color = "#60a5fa";
+                      }
+                    }
+                  }}
+                >
+                  {site.isActive ? "🔴 Disable" : "✅ Enable"}
+                </button>
+                <button
+                  className="btn btn-outline"
+                  disabled={loading}
+                  onClick={handleDeleteSite}
+                  style={{ 
+                    fontSize: 15,
+                    padding: "12px 24px",
+                    fontWeight: 600,
+                    borderColor: "rgba(239, 68, 68, 0.4)",
+                    color: "#f87171",
+                    transition: "all 0.2s ease",
+                    cursor: loading ? "not-allowed" : "pointer",
+                    opacity: loading ? 0.6 : 1
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
+                      e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.7)";
+                      e.currentTarget.style.color = "#fca5a5";
+                      e.currentTarget.style.boxShadow = "0 8px 24px rgba(239, 68, 68, 0.4)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.4)";
+                      e.currentTarget.style.color = "#f87171";
+                      e.currentTarget.style.boxShadow = "none";
+                    }
+                  }}
+                >
+                  🗑️ Delete
+                </button>
+              </>
+            )}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* SUB-SITES */}
@@ -300,7 +314,7 @@ export default function SiteCard({ site, onRefresh }) {
             letterSpacing: "1px",
             fontWeight: 700
           }}>
-            🏗 Sub-Sites ({site.subSites?.length || 0})
+            🏗 Sub-Sites ({visibleSubSites?.length || 0})
           </h4>
           {canManageSubSite && site.isActive && (
             <a 
@@ -341,7 +355,7 @@ export default function SiteCard({ site, onRefresh }) {
           )}
         </div>
 
-        {site.subSites?.length === 0 && (
+        {(!visibleSubSites || visibleSubSites.length === 0) && (
           <div style={{ 
             color: "#64748b", 
             fontSize: 16,
@@ -356,7 +370,11 @@ export default function SiteCard({ site, onRefresh }) {
         )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {site.subSites?.map((subSite) => (
+          {visibleSubSites?.map((subSite) => {
+            const canViewThisSubSiteQR = canViewSubSiteQR && (
+              user.role !== ROLES.SUB_SITE_ADMIN || user.allowedSubSites?.includes(subSite.subSiteId)
+            );
+            return (
             <div 
               key={subSite.subSiteId} 
               className="subsite-item"
@@ -419,116 +437,123 @@ export default function SiteCard({ site, onRefresh }) {
                 )}
               </div>
 
-              {canManageSubSite && (
+              {(canViewThisSubSiteQR || canManageSubSite) && (
                 <div style={{ display: "flex", gap: 10 }}>
-                  <button
-                    onClick={() => showQRModal(site, subSite)}
-                    style={{ 
-                      fontSize: 14, 
-                      padding: "8px 18px",
-                      fontWeight: 700,
-                      background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                      transition: "all 0.3s ease",
-                      boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px"
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "scale(1.08) translateY(-1px)";
-                      e.currentTarget.style.boxShadow = "0 6px 20px rgba(16, 185, 129, 0.5)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "scale(1) translateY(0)";
-                      e.currentTarget.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
-                    }}
-                  >
-                    <span style={{ fontSize: "16px" }}>📱</span>
-                    <span>QR</span>
-                  </button>
-                  <button
-                    className="btn btn-outline"
-                    disabled={loading}
-                    onClick={() => handleToggleSubSite(subSite.subSiteId, subSite.isActive)}
-                    style={{ 
-                      fontSize: 14, 
-                      padding: "8px 18px",
-                      fontWeight: 600,
-                      transition: "all 0.2s ease",
-                      cursor: loading ? "not-allowed" : "pointer",
-                      opacity: loading ? 0.6 : 1
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!loading) {
+                  {canViewThisSubSiteQR && (
+                    <button
+                      onClick={() => showQRModal(site, subSite)}
+                      style={{ 
+                        fontSize: 14, 
+                        padding: "8px 18px",
+                        fontWeight: 700,
+                        background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        transition: "all 0.3s ease",
+                        boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px"
+                      }}
+                      onMouseEnter={(e) => {
                         e.currentTarget.style.transform = "scale(1.08) translateY(-1px)";
-                        if (subSite.isActive) {
-                          e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
-                          e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.6)";
-                          e.currentTarget.style.color = "#fca5a5";
-                          e.currentTarget.style.boxShadow = "0 6px 20px rgba(239, 68, 68, 0.3)";
-                        } else {
-                          e.currentTarget.style.background = "rgba(59, 130, 246, 0.15)";
-                          e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.6)";
-                          e.currentTarget.style.color = "#60a5fa";
-                          e.currentTarget.style.boxShadow = "0 6px 20px rgba(59, 130, 246, 0.3)";
-                        }
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!loading) {
+                        e.currentTarget.style.boxShadow = "0 6px 20px rgba(16, 185, 129, 0.5)";
+                      }}
+                      onMouseLeave={(e) => {
                         e.currentTarget.style.transform = "scale(1) translateY(0)";
-                        e.currentTarget.style.background = "transparent";
-                        e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.4)";
-                        e.currentTarget.style.color = "#60a5fa";
-                        e.currentTarget.style.boxShadow = "none";
-                      }
-                    }}
-                  >
-                    {subSite.isActive ? "Disable" : "Enable"}
-                  </button>
-                  <button
-                    className="btn btn-outline"
-                    disabled={loading}
-                    onClick={() => handleDeleteSubSite(subSite.subSiteId)}
-                    style={{ 
-                      fontSize: 14, 
-                      padding: "8px 18px",
-                      fontWeight: 600,
-                      borderColor: "rgba(239, 68, 68, 0.4)",
-                      color: "#f87171",
-                      transition: "all 0.2s ease",
-                      cursor: loading ? "not-allowed" : "pointer",
-                      opacity: loading ? 0.6 : 1
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!loading) {
-                        e.currentTarget.style.transform = "scale(1.08) translateY(-1px)";
-                        e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
-                        e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.7)";
-                        e.currentTarget.style.color = "#fca5a5";
-                        e.currentTarget.style.boxShadow = "0 6px 20px rgba(239, 68, 68, 0.4)";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!loading) {
-                        e.currentTarget.style.transform = "scale(1) translateY(0)";
-                        e.currentTarget.style.background = "transparent";
-                        e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.4)";
-                        e.currentTarget.style.color = "#f87171";
-                        e.currentTarget.style.boxShadow = "none";
-                      }
-                    }}
-                  >
-                    Delete
-                  </button>
+                        e.currentTarget.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
+                      }}
+                    >
+                      <span style={{ fontSize: "16px" }}>📱</span>
+                      <span>QR</span>
+                    </button>
+                  )}
+
+                  {canManageSubSite && (
+                    <>
+                      <button
+                        className="btn btn-outline"
+                        disabled={loading}
+                        onClick={() => handleToggleSubSite(subSite.subSiteId, subSite.isActive)}
+                        style={{ 
+                          fontSize: 14, 
+                          padding: "8px 18px",
+                          fontWeight: 600,
+                          transition: "all 0.2s ease",
+                          cursor: loading ? "not-allowed" : "pointer",
+                          opacity: loading ? 0.6 : 1
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!loading) {
+                            e.currentTarget.style.transform = "scale(1.08) translateY(-1px)";
+                            if (subSite.isActive) {
+                              e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
+                              e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.6)";
+                              e.currentTarget.style.color = "#fca5a5";
+                              e.currentTarget.style.boxShadow = "0 6px 20px rgba(239, 68, 68, 0.3)";
+                            } else {
+                              e.currentTarget.style.background = "rgba(59, 130, 246, 0.15)";
+                              e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.6)";
+                              e.currentTarget.style.color = "#60a5fa";
+                              e.currentTarget.style.boxShadow = "0 6px 20px rgba(59, 130, 246, 0.3)";
+                            }
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!loading) {
+                            e.currentTarget.style.transform = "scale(1) translateY(0)";
+                            e.currentTarget.style.background = "transparent";
+                            e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.4)";
+                            e.currentTarget.style.color = "#60a5fa";
+                            e.currentTarget.style.boxShadow = "none";
+                          }
+                        }}
+                      >
+                        {subSite.isActive ? "Disable" : "Enable"}
+                      </button>
+                      <button
+                        className="btn btn-outline"
+                        disabled={loading}
+                        onClick={() => handleDeleteSubSite(subSite.subSiteId)}
+                        style={{ 
+                          fontSize: 14, 
+                          padding: "8px 18px",
+                          fontWeight: 600,
+                          borderColor: "rgba(239, 68, 68, 0.4)",
+                          color: "#f87171",
+                          transition: "all 0.2s ease",
+                          cursor: loading ? "not-allowed" : "pointer",
+                          opacity: loading ? 0.6 : 1
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!loading) {
+                            e.currentTarget.style.transform = "scale(1.08) translateY(-1px)";
+                            e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
+                            e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.7)";
+                            e.currentTarget.style.color = "#fca5a5";
+                            e.currentTarget.style.boxShadow = "0 6px 20px rgba(239, 68, 68, 0.4)";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!loading) {
+                            e.currentTarget.style.transform = "scale(1) translateY(0)";
+                            e.currentTarget.style.background = "transparent";
+                            e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.4)";
+                            e.currentTarget.style.color = "#f87171";
+                            e.currentTarget.style.boxShadow = "none";
+                          }
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>
-          ))}
+          );})}
         </div>
       </div>
 

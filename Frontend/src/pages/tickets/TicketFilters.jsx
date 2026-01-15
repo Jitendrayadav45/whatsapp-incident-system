@@ -21,6 +21,36 @@ export default function TicketFilters({ filters, setFilters }) {
           </div>
         </div>
 
+        {/* Search Bar */}
+        <div className="search-bar">
+          <label className="search-label">Search by Ticket ID</label>
+          <div className="search-input-wrapper">
+            <span className="search-icon">🔎</span>
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Type ticket number (e.g., TKT-100673)"
+              value={filters.search || ""}
+              onChange={(e) =>
+                setFilters({ ...filters, search: e.target.value, page: 1 })
+              }
+              autoComplete="off"
+            />
+            {filters.search ? (
+              <button
+                type="button"
+                className="clear-search"
+                onClick={() => setFilters({ ...filters, search: "", page: 1 })}
+              >
+                ✕
+              </button>
+            ) : null}
+          </div>
+          <p className="filter-help-text">
+            Live, character-by-character search.
+          </p>
+        </div>
+
         {/* Filter Controls */}
         <div className="filter-controls-grid">
           {/* SITE FILTER */}
@@ -75,6 +105,7 @@ export default function TicketFilters({ filters, setFilters }) {
                 <option value="OPEN">🟢 Open</option>
                 <option value="IN_PROGRESS">🟡 In Progress</option>
                 <option value="RESOLVED">✅ Resolved</option>
+                <option value="CLOSED">🔒 Closed</option>
               </select>
               <span className="select-arrow">▼</span>
             </div>
@@ -121,7 +152,7 @@ export default function TicketFilters({ filters, setFilters }) {
               )}
               <button
                 className="clear-all-filters"
-                onClick={() => setFilters({ page: 1, limit: filters.limit })}
+                onClick={() => setFilters({ page: 1, limit: filters.limit, search: "" })}
               >
                 Clear All
               </button>
@@ -207,6 +238,63 @@ export default function TicketFilters({ filters, setFilters }) {
           grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
           gap: 1.5rem;
           margin-bottom: 1.5rem;
+        }
+
+        .search-bar {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          margin-bottom: 1.5rem;
+        }
+
+        .search-label {
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 0.9rem;
+          font-weight: 600;
+        }
+
+        .search-input-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 12px;
+          padding: 0.75rem 1rem;
+          gap: 0.5rem;
+        }
+
+        .search-icon {
+          font-size: 1rem;
+          color: rgba(255, 255, 255, 0.7);
+        }
+
+        .search-input {
+          flex: 1;
+          background: transparent;
+          border: none;
+          outline: none;
+          color: #fff;
+          font-size: 1rem;
+        }
+
+        .search-input::placeholder {
+          color: rgba(255, 255, 255, 0.5);
+        }
+
+        .clear-search {
+          background: rgba(255, 255, 255, 0.08);
+          border: none;
+          color: #fff;
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: background 0.2s ease;
+        }
+
+        .clear-search:hover {
+          background: rgba(255, 255, 255, 0.16);
         }
 
         .filter-field {

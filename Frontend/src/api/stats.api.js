@@ -11,6 +11,7 @@ export const fetchStats = async () => {
     open: byStatus.OPEN ?? 0,
     inProgress: byStatus.IN_PROGRESS ?? 0,
     resolved: byStatus.RESOLVED ?? 0,
+    closed: byStatus.CLOSED ?? 0,
     lastUpdated: new Date().toISOString()
   };
 };

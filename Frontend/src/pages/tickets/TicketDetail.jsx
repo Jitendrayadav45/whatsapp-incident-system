@@ -1,20 +1,28 @@
-// src/pages/tickets/TicketDetail.jsx
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api/axios";
+import { deleteTicket, reportTicket } from "../../api/tickets.api";
 import Loader from "../../components/common/Loader";
 import TicketStatusUpdater from "../../components/tickets/TicketStatusUpdater";
 import AIAnalysisPanel from "../../components/tickets/AIAnalysisPanel";
 import SLABadge from "../../components/tickets/SLABadge";
 import StatusBadge from "../../components/tickets/StatusBadge";
 import { formatDateTime } from "../../utils/formatDate";
+import { useAuth } from "../../auth/useAuth";
+import { isOwner } from "../../utils/roleUtils";
+import ConfirmModal from "../../components/common/ConfirmModal";
+import PromptModal from "../../components/common/PromptModal";
 
 export default function TicketDetail() {
   const { ticketId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [actionBusy, setActionBusy] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [reportModal, setReportModal] = useState(false);
 
   async function fetchTicket() {
     try {
@@ -34,6 +42,42 @@ export default function TicketDetail() {
   useEffect(() => {
     fetchTicket();
   }, [ticketId]);
+
+  const handleDelete = () => {
+    setDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    setDeleteModal(false);
+    try {
+      setActionBusy(true);
+      await deleteTicket(ticketId);
+      window.showToast?.("Ticket deleted successfully", "success");
+      navigate("/tickets");
+    } catch (err) {
+      window.showToast?.(err?.response?.data?.error || "Failed to delete ticket", "error");
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  const handleReport = () => {
+    setReportModal(true);
+  };
+
+  const confirmReport = async (reason) => {
+    setReportModal(false);
+    if (!reason || !reason.trim()) return;
+    try {
+      setActionBusy(true);
+      await reportTicket(ticketId, reason.trim());
+      window.showToast?.("Ticket reported successfully", "success");
+    } catch (err) {
+      window.showToast?.(err?.response?.data?.error || "Failed to report ticket", "error");
+    } finally {
+      setActionBusy(false);
+    }
+  };
 
   if (loading) return (
     <div className="page-container">
@@ -61,7 +105,6 @@ export default function TicketDetail() {
 
   return (
     <div className="page-container">
-      {/* Premium Header */}
       <div style={{ 
         display: "flex", 
         justifyContent: "space-between", 
@@ -123,7 +166,88 @@ export default function TicketDetail() {
             </div>
           </div>
         </div>
-        <StatusBadge status={ticket.status} />
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <StatusBadge status={ticket.status} />
+          {isOwner(user.role) ? (
+            <button
+              style={{
+                border: "1px solid rgba(248, 113, 113, 0.5)",
+                background: "linear-gradient(135deg, rgba(220, 38, 38, 0.2) 0%, rgba(153, 27, 27, 0.2) 100%)",
+                color: "#fca5a5",
+                padding: "10px 24px",
+                borderRadius: "999px",
+                cursor: actionBusy ? "not-allowed" : "pointer",
+                fontSize: "0.9rem",
+                fontWeight: 600,
+                letterSpacing: "0.025em",
+                transition: "all 0.3s ease",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+                opacity: actionBusy ? 0.5 : 1
+              }}
+              onClick={handleDelete}
+              disabled={actionBusy}
+              onMouseEnter={(e) => {
+                if (!actionBusy) {
+                  e.currentTarget.style.borderColor = "rgba(248, 113, 113, 0.8)";
+                  e.currentTarget.style.background = "linear-gradient(135deg, rgba(220, 38, 38, 0.3) 0%, rgba(153, 27, 27, 0.3) 100%)";
+                  e.currentTarget.style.color = "#fecdd3";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 4px 16px rgba(248, 113, 113, 0.3)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!actionBusy) {
+                  e.currentTarget.style.borderColor = "rgba(248, 113, 113, 0.5)";
+                  e.currentTarget.style.background = "linear-gradient(135deg, rgba(220, 38, 38, 0.2) 0%, rgba(153, 27, 27, 0.2) 100%)";
+                  e.currentTarget.style.color = "#fca5a5";
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.15)";
+                }
+              }}
+            >
+              🗑️ Delete
+            </button>
+          ) : (
+            <button
+              style={{
+                border: "1px solid rgba(148, 163, 184, 0.3)",
+                background: "linear-gradient(135deg, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.3) 100%)",
+                color: "#cbd5e1",
+                padding: "10px 24px",
+                borderRadius: "999px",
+                cursor: actionBusy ? "not-allowed" : "pointer",
+                fontSize: "0.9rem",
+                fontWeight: 600,
+                letterSpacing: "0.025em",
+                transition: "all 0.3s ease",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+                opacity: actionBusy ? 0.5 : 1
+              }}
+              onClick={handleReport}
+              disabled={actionBusy}
+              onMouseEnter={(e) => {
+                if (!actionBusy) {
+                  e.currentTarget.style.borderColor = "rgba(148, 163, 184, 0.5)";
+                  e.currentTarget.style.background = "linear-gradient(135deg, rgba(51, 65, 85, 0.5) 0%, rgba(30, 41, 59, 0.5) 100%)";
+                  e.currentTarget.style.color = "#e2e8f0";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 4px 16px rgba(148, 163, 184, 0.2)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!actionBusy) {
+                  e.currentTarget.style.borderColor = "rgba(148, 163, 184, 0.3)";
+                  e.currentTarget.style.background = "linear-gradient(135deg, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.3) 100%)";
+                  e.currentTarget.style.color = "#cbd5e1";
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.15)";
+                }
+              }}
+            >
+              🚩 Report
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Main Content Grid */}
@@ -378,10 +502,150 @@ export default function TicketDetail() {
         />
       </div>
 
+      {/* Resolution Details Section */}
+      {ticket.resolutionDetails && ticket.resolutionDetails.photoUrl && (
+        <div 
+          className="card resolution-details-card"
+          style={{
+            border: "1px solid rgba(34, 197, 94, 0.3)",
+            transition: "all 0.3s ease"
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-4px)";
+            e.currentTarget.style.boxShadow = "0 12px 32px rgba(34, 197, 94, 0.3)";
+            e.currentTarget.style.borderColor = "rgba(34, 197, 94, 0.5)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 16px 40px rgba(0, 0, 0, 0.25)";
+            e.currentTarget.style.borderColor = "rgba(34, 197, 94, 0.3)";
+          }}
+        >
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "12px",
+            marginBottom: 20,
+            paddingBottom: 16,
+            borderBottom: "1px solid rgba(255, 255, 255, 0.1)"
+          }}>
+            <div style={{
+              width: 40,
+              height: 40,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "20px",
+              boxShadow: "0 4px 8px rgba(34, 197, 94, 0.4)"
+            }}>
+              ✅
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#86efac" }}>Resolution Details</h3>
+              <p style={{ margin: "4px 0 0 0", fontSize: 12, color: "#94a3b8" }}>
+                Resolved by {ticket.resolutionDetails.resolvedBy} on {formatDateTime(ticket.resolutionDetails.resolvedAt)}
+              </p>
+            </div>
+          </div>
+
+          {/* Resolution Photo */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ 
+              fontSize: 13, 
+              fontWeight: 600, 
+              color: "#86efac", 
+              marginBottom: 12,
+              display: "flex",
+              alignItems: "center",
+              gap: 8
+            }}>
+              <span>📷</span>
+              <span>Resolution Photo</span>
+            </div>
+            <img 
+              src={ticket.resolutionDetails.photoUrl} 
+              alt="Resolution" 
+              style={{
+                width: "100%",
+                maxHeight: "500px",
+                objectFit: "contain",
+                borderRadius: "12px",
+                border: "1px solid rgba(34, 197, 94, 0.2)",
+                background: "rgba(0, 0, 0, 0.3)",
+                cursor: "pointer"
+              }}
+              onClick={() => window.open(ticket.resolutionDetails.photoUrl, "_blank")}
+            />
+            <p style={{ 
+              fontSize: 12, 
+              color: "#64748b", 
+              marginTop: 8,
+              fontStyle: "italic"
+            }}>
+              Click image to view full size
+            </p>
+          </div>
+
+          {/* Resolution Notes */}
+          {ticket.resolutionDetails.notes && (
+            <div>
+              <div style={{ 
+                fontSize: 13, 
+                fontWeight: 600, 
+                color: "#86efac", 
+                marginBottom: 12,
+                display: "flex",
+                alignItems: "center",
+                gap: 8
+              }}>
+                <span>📝</span>
+                <span>Resolution Notes</span>
+              </div>
+              <div style={{
+                padding: "16px",
+                background: "rgba(34, 197, 94, 0.05)",
+                border: "1px solid rgba(34, 197, 94, 0.15)",
+                borderRadius: "10px",
+                fontSize: 14,
+                color: "#cbd5e1",
+                lineHeight: 1.6,
+                whiteSpace: "pre-wrap"
+              }}>
+                {ticket.resolutionDetails.notes}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* AI Analysis Section */}
       {ticket.aiAnalysis && (
         <AIAnalysisPanel analysis={ticket.aiAnalysis} />
       )}
+
+      <ConfirmModal
+        isOpen={deleteModal}
+        title="Delete Ticket"
+        message="Are you sure you want to delete this ticket? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        danger={true}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteModal(false)}
+      />
+
+      <PromptModal
+        isOpen={reportModal}
+        title="Report Ticket"
+        message="Please provide a reason for reporting this ticket:"
+        placeholder="e.g., Duplicate ticket, Spam, Inappropriate content..."
+        confirmText="Submit Report"
+        cancelText="Cancel"
+        onConfirm={confirmReport}
+        onCancel={() => setReportModal(false)}
+      />
     </div>
   );
 }

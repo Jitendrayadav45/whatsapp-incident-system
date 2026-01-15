@@ -1,4 +1,3 @@
-// src/cache/siteSession.cache.js
 const NodeCache = require("node-cache");
 
 const siteSessionCache = new NodeCache({

@@ -1,4 +1,3 @@
-// src/api/admins.api.js
 import api from "./axios";
 
 

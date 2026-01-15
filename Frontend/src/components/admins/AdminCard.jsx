@@ -1,4 +1,3 @@
-// src/components/admins/AdminCard.jsx
 export default function AdminCard({ admin }) {
   return (
     <div className="card">

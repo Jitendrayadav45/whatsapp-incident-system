@@ -17,7 +17,7 @@ module.exports = async function adminAuth(req, res, next) {
       return res.status(401).json({ error: "Invalid admin" });
     }
 
-    req.admin = admin; // 🔑 inject admin context
+    req.admin = admin; //  inject admin context
     next();
 
   } catch (err) {

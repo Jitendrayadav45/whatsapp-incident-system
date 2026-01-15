@@ -22,6 +22,11 @@ export const SIDEBAR_ITEMS = [
     roles: [ROLES.OWNER, ROLES.SITE_ADMIN]
   },
   {
+    label: "Reported Tickets",
+    path: "/ticket-reports",
+    roles: [ROLES.OWNER]
+  },
+  {
     label: "Stats",
     path: "/dashboard",
     roles: [ROLES.OWNER]

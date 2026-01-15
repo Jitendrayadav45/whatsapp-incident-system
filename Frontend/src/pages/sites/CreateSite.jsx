@@ -1,4 +1,3 @@
-// src/pages/sites/CreateSite.jsx
 import { useState } from "react";
 import { createSite } from "../../api/sites.api";
 import { useNavigate } from "react-router-dom";
@@ -41,7 +40,6 @@ export default function CreateSite() {
 
   return (
     <div className="page-container">
-      {/* Header with gradient */}
       <div style={{
         marginBottom: 32,
         padding: "24px 32px",
@@ -100,9 +98,7 @@ export default function CreateSite() {
           </div>
         )}
 
-        {/* Form Content */}
         <div style={{ padding: "32px" }}>
-          {/* Site Information Section */}
           <div style={{ marginBottom: 24 }}>
             <h3 style={{
               fontSize: 16,

@@ -3,5 +3,3 @@ module.exports = function generateTicketId() {
   const rand = Math.floor(100 + Math.random() * 900);
   return `TKT-${time}-${rand}`;
 };
-
-// console.log(generateTicketId());

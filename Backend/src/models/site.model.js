@@ -16,7 +16,7 @@ const siteSchema = new mongoose.Schema(
     },
 
     /**
-     * 🔐 Governance
+     *  Governance
      * OWNER who created this site
      */
     createdBy: {

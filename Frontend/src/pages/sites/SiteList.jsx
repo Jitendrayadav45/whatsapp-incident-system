@@ -1,4 +1,3 @@
-// src/pages/sites/SiteList.jsx
 import { useEffect, useState } from "react";
 import { getSites } from "../../api/sites.api";
 import SiteCard from "../../components/sites/SiteCard";

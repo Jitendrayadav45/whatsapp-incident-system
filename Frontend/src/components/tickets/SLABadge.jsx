@@ -1,4 +1,3 @@
-// src/components/tickets/SLABadge.jsx
 import { formatAging } from "../../utils/formatAging";
 
 function getBadgeClass(createdAt) {
@@ -12,7 +11,7 @@ function getBadgeClass(createdAt) {
 
 export default function SLABadge({ ticket }) {
   if (ticket.status === "RESOLVED") {
-    return <span className="badge badge-success">Resolved</span>;
+    return null; // Status badge already shows resolved; avoid duplicate pill
   }
 
   const aging = formatAging(ticket.createdAt);

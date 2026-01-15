@@ -20,7 +20,21 @@ async function uploadImageBase64({ base64, mimeType }) {
 
   const result = await cloudinary.uploader.upload(dataUri, {
     folder: process.env.CLOUDINARY_FOLDER || "whatsapp-tickets",
-    resource_type: "image"
+    resource_type: "image",
+    
+    //  AGGRESSIVE COMPRESSION FOR STORAGE OPTIMIZATION
+    transformation: [
+      {
+        width: 1920,           // Max width
+        height: 1920,          // Max height  
+        crop: "limit",        
+        quality: "auto:good",  
+        fetch_format: "auto"   
+      }
+    ],
+    
+    flags: "lossy",           
+    quality_analysis: true,    
   });
 
   return {

@@ -1,4 +1,3 @@
-// src/components/sites/SubSiteTable.jsx
 export default function SubSiteTable({ subSites = [] }) {
   if (!subSites.length) return <p>No sub-sites</p>;
 

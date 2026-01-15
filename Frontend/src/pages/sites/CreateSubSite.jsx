@@ -1,4 +1,3 @@
-// src/pages/sites/CreateSubSite.jsx
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { createSubSite } from "../../api/sites.api";
@@ -41,7 +40,6 @@ export default function CreateSubSite() {
 
   return (
     <div className="page-container">
-      {/* Header with gradient */}
       <div style={{
         marginBottom: 32,
         padding: "24px 32px",
@@ -100,9 +98,7 @@ export default function CreateSubSite() {
           </div>
         )}
 
-        {/* Form Content */}
         <div style={{ padding: "32px" }}>
-          {/* Sub-Site Information Section */}
           <div style={{ marginBottom: 24 }}>
             <h3 style={{
               fontSize: 16,

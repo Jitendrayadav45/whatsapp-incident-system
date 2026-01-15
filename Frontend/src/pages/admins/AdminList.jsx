@@ -1,4 +1,3 @@
-// src/pages/admins/AdminList.jsx
 import { useEffect, useState } from "react";
 import { getAdmins, updateAdminStatus, deleteAdmin, resetAdminPassword } from "../../api/admins.api";
 import Loader from "../../components/common/Loader";

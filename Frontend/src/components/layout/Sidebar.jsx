@@ -1,4 +1,3 @@
-// src/components/layout/Sidebar.jsx
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth";
 import { ROLES } from "../../utils/constants";
@@ -15,17 +14,11 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      {/* =====================
-          BRAND
-      ===================== */}
       <div className="sidebar-header">
         <h3>Sentinel</h3>
         <span className="role-badge">{role}</span>
       </div>
 
-      {/* =====================
-          NAVIGATION
-      ===================== */}
       <nav className="sidebar-nav">
         <NavLink to="/dashboard" className={linkClass}>
           Dashboard
@@ -35,9 +28,6 @@ export default function Sidebar() {
           Tickets
         </NavLink>
 
-        {/* =====================
-            OWNER
-        ===================== */}
         {role === ROLES.OWNER && (
           <>
             <div className="nav-section">System</div>
@@ -57,12 +47,13 @@ export default function Sidebar() {
             <NavLink to="/admins/create" className={linkClass}>
               Create Admin
             </NavLink>
+
+            <NavLink to="/ticket-reports" className={linkClass}>
+              Reported Tickets
+            </NavLink>
           </>
         )}
 
-        {/* =====================
-            SITE ADMIN
-        ===================== */}
         {role === ROLES.SITE_ADMIN && (
           <>
             <div className="nav-section">Management</div>
@@ -80,20 +71,18 @@ export default function Sidebar() {
             </NavLink>
           </>
         )}
-
-        {/* =====================
-            SUB-SITE ADMIN
-        ===================== */}
         {role === ROLES.SUB_SITE_ADMIN && (
-          <div className="nav-hint">
-            Limited access
-          </div>
+          <>
+            <div className="nav-section">Management</div>
+
+            <NavLink to="/sites" className={linkClass}>
+              Sites & Sub-Sites
+            </NavLink>
+
+            <div className="nav-hint">Limited access</div>
+          </>
         )}
       </nav>
-
-      {/* =====================
-          FOOTER
-      ===================== */}
     </aside>
   );
 }

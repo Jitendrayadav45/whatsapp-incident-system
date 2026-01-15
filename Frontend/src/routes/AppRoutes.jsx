@@ -17,6 +17,7 @@ import CreateSite from "../pages/sites/CreateSite";
 import CreateSubSite from "../pages/sites/CreateSubSite";
 import AdminList from "../pages/admins/AdminList";
 import CreateAdmin from "../pages/admins/CreateAdmin";
+import TicketReports from "../pages/reports/TicketReports";
 import NotFound from "../pages/notFound/NotFound";
 
 export default function AppRoutes() {
@@ -40,11 +41,11 @@ export default function AppRoutes() {
         <Route path="tickets" element={<TicketList />} />
         <Route path="tickets/:ticketId" element={<TicketDetail />} />
 
-        {/* OWNER + SITE_ADMIN */}
+        {/* OWNER + SITE_ADMIN + SUB_SITE_ADMIN (read-only for sub-site admin) */}
         <Route
           path="sites"
           element={
-            <RoleRoute allowedRoles={[ROLES.OWNER, ROLES.SITE_ADMIN]}>
+            <RoleRoute allowedRoles={[ROLES.OWNER, ROLES.SITE_ADMIN, ROLES.SUB_SITE_ADMIN]}>
               <SiteList />
             </RoleRoute>
           }
@@ -84,6 +85,16 @@ export default function AppRoutes() {
           element={
             <RoleRoute allowedRoles={[ROLES.OWNER, ROLES.SITE_ADMIN]}>
               <CreateAdmin />
+            </RoleRoute>
+          }
+        />
+
+        {/* Ticket Reports - Owner only */}
+        <Route
+          path="ticket-reports"
+          element={
+            <RoleRoute allowedRoles={[ROLES.OWNER]}>
+              <TicketReports />
             </RoleRoute>
           }
         />

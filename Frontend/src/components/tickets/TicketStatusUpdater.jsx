@@ -2,12 +2,25 @@ import { useState } from "react";
 import { STATUS_FLOW } from "../../utils/statusFlow";
 import { updateTicketStatus } from "../../api/tickets.api";
 import Button from "../common/Button";
+import { useAuth } from "../../auth/useAuth";
+import { isOwner, isSiteAdmin } from "../../utils/roleUtils";
+import ResolutionModal from "./ResolutionModal";
 
 export default function TicketStatusUpdater({ ticket, onUpdated }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showResolutionModal, setShowResolutionModal] = useState(false);
+  const { user } = useAuth();
 
-  const nextStatuses = STATUS_FLOW[ticket.status] || [];
+  let nextStatuses = STATUS_FLOW[ticket.status] || [];
+  
+  // Filter out CLOSED status if user is not OWNER or SITE_ADMIN
+  if (nextStatuses.includes("CLOSED")) {
+    const canClose = user && (isOwner(user.role) || isSiteAdmin(user.role));
+    if (!canClose) {
+      nextStatuses = nextStatuses.filter(status => status !== "CLOSED");
+    }
+  }
 
   if (nextStatuses.length === 0) {
     return (
@@ -23,11 +36,12 @@ export default function TicketStatusUpdater({ ticket, onUpdated }) {
     );
   }
 
-  async function handleUpdate(nextStatus) {
+  async function handleUpdate(nextStatus, resolutionData = null) {
     try {
       setLoading(true);
       setError("");
-      await updateTicketStatus(ticket.ticketId, nextStatus);
+      await updateTicketStatus(ticket.ticketId, nextStatus, resolutionData);
+      setShowResolutionModal(false);
       onUpdated?.(); // refetch ticket
     } catch (err) {
       console.error("Status update error:", err);
@@ -36,6 +50,19 @@ export default function TicketStatusUpdater({ ticket, onUpdated }) {
       setLoading(false);
     }
   }
+
+  const handleStatusClick = (status) => {
+    // Show modal for RESOLVED status
+    if (status === "RESOLVED") {
+      setShowResolutionModal(true);
+    } else {
+      handleUpdate(status);
+    }
+  };
+
+  const handleResolutionSubmit = (resolutionData) => {
+    handleUpdate("RESOLVED", resolutionData);
+  };
 
   return (
     <div>
@@ -74,7 +101,7 @@ export default function TicketStatusUpdater({ ticket, onUpdated }) {
         {nextStatuses.map(status => (
           <button
             key={status}
-            onClick={() => handleUpdate(status)}
+            onClick={() => handleStatusClick(status)}
             disabled={loading}
             style={{
               padding: "14px 28px",
@@ -127,7 +154,7 @@ export default function TicketStatusUpdater({ ticket, onUpdated }) {
             ) : (
               <>
                 <span style={{ fontSize: "18px" }}>
-                  {status === "IN_PROGRESS" ? "⚙️" : status === "RESOLVED" ? "✅" : "📋"}
+                  {status === "IN_PROGRESS" ? "⚙️" : status === "RESOLVED" ? "✅" : status === "CLOSED" ? "🔒" : "📋"}
                 </span>
                 <span>Mark as {status.replace("_", " ")}</span>
               </>
@@ -135,6 +162,14 @@ export default function TicketStatusUpdater({ ticket, onUpdated }) {
           </button>
         ))}
       </div>
+
+      {/* Resolution Modal */}
+      <ResolutionModal
+        isOpen={showResolutionModal}
+        onClose={() => setShowResolutionModal(false)}
+        onSubmit={handleResolutionSubmit}
+        loading={loading}
+      />
 
       <style>{`
         @keyframes spin {

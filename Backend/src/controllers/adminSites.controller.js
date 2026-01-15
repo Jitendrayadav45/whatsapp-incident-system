@@ -2,7 +2,7 @@ const Site = require("../models/site.model");
 const SubSite = require("../models/subSite.model");
 
 /**
- * ✅ CREATE SITE (OWNER ONLY)
+ *  CREATE SITE (OWNER ONLY)
  * POST /api/admin/sites
  */
 exports.createSite = async (req, res) => {
@@ -42,7 +42,7 @@ exports.createSite = async (req, res) => {
 };
 
 /**
- * 📋 GET SITES (ROLE AWARE)
+ *  GET SITES (ROLE AWARE)
  * GET /api/admin/sites
  */
 exports.getSites = async (req, res) => {
@@ -61,18 +61,26 @@ exports.getSites = async (req, res) => {
       siteId: { $in: siteIds }
     }).lean();
 
-    const response = sites.map(site => ({
-      siteId: site.siteId,
-      siteName: site.siteName,
-      isActive: site.isActive,
-      subSites: subSites
+    const response = sites.map(site => {
+      // Restrict sub-sites for SUB_SITE_ADMIN to only their allowed list
+      const scopedSubSites = subSites
         .filter(sub => sub.siteId === site.siteId)
-        .map(sub => ({
+        .filter(sub => {
+          if (admin.role !== "SUB_SITE_ADMIN") return true;
+          return (admin.allowedSubSites || []).includes(sub.subSiteId);
+        });
+
+      return {
+        siteId: site.siteId,
+        siteName: site.siteName,
+        isActive: site.isActive,
+        subSites: scopedSubSites.map(sub => ({
           subSiteId: sub.subSiteId,
           subSiteName: sub.subSiteName,
           isActive: sub.isActive
         }))
-    }));
+      };
+    });
 
     return res.json(response);
 
@@ -83,7 +91,7 @@ exports.getSites = async (req, res) => {
 };
 
 /**
- * ⛔ DISABLE SITE (OWNER ONLY)
+ *  DISABLE SITE (OWNER ONLY)
  * PATCH /api/sites/:siteId/disable
  */
 exports.disableSite = async (req, res) => {
@@ -116,7 +124,7 @@ exports.disableSite = async (req, res) => {
 };
 
 /**
- * ✅ ENABLE SITE (OWNER ONLY)
+ *  ENABLE SITE (OWNER ONLY)
  * PATCH /api/sites/:siteId/enable
  */
 exports.enableSite = async (req, res) => {
@@ -149,7 +157,7 @@ exports.enableSite = async (req, res) => {
 };
 
 /**
- * 🗑️ DELETE SITE (OWNER ONLY)
+ *  DELETE SITE (OWNER ONLY)
  * DELETE /api/sites/:siteId
  */
 exports.deleteSite = async (req, res) => {

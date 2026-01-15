@@ -21,8 +21,8 @@ async function loginAdmin({ email, password }) {
     {
       userId: user._id,
       role: user.role,
-      siteId: user.siteId,
-      subSiteId: user.subSiteId
+      allowedSites: user.allowedSites || [],
+      allowedSubSites: user.allowedSubSites || []
     },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRY }
@@ -33,8 +33,8 @@ async function loginAdmin({ email, password }) {
     user: {
       name: user.name,
       role: user.role,
-      siteId: user.siteId,
-      subSiteId: user.subSiteId
+      allowedSites: user.allowedSites || [],
+      allowedSubSites: user.allowedSubSites || []
     }
   };
 }

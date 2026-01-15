@@ -6,14 +6,14 @@ const subSiteSchema = new mongoose.Schema(
       type: String,
       required: true,
       uppercase: true,
-      index: true // GITA1, ZONE-A
+      index: true 
     },
 
     siteId: {
       type: String,
       required: true,
       uppercase: true,
-      index: true // Parent site (GITA)
+      index: true 
     },
 
     subSiteName: {
@@ -22,7 +22,7 @@ const subSiteSchema = new mongoose.Schema(
     },
 
     /**
-     * 🔐 Governance
+     *  Governance
      * Can be OWNER or SITE_ADMIN
      */
     createdBy: {
@@ -48,7 +48,7 @@ const subSiteSchema = new mongoose.Schema(
 );
 
 /**
- * 🔒 One SubSite per Site
+ * One SubSite per Site
  */
 subSiteSchema.index(
   { siteId: 1, subSiteId: 1 },

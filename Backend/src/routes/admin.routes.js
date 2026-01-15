@@ -2,17 +2,19 @@ const express = require("express");
 const router = express.Router();
 const adminAuth = require("../middlewares/adminAuth.middleware");
 
-/* 🔓 AUTH */
+/*  AUTH */
 const { login } = require("../controllers/adminAuth.controller");
 router.post("/auth/login", login);
 
-/* 🔐 PROTECTED ROUTES */
+/*  PROTECTED ROUTES */
 router.use(adminAuth);
 
-/* 🎫 TICKETS */
+/* TICKETS */
 const {
   getTickets,
-  getTicketByTicketId
+  getTicketByTicketId,
+  deleteTicketByTicketId,
+  reportTicket
 } = require("../controllers/adminTickets.controller");
 
 const {
@@ -21,13 +23,28 @@ const {
 
 router.get("/tickets", getTickets);
 router.get("/tickets/:ticketId", getTicketByTicketId);
+router.delete("/tickets/:ticketId", deleteTicketByTicketId);
+router.post("/tickets/:ticketId/report", reportTicket);
 router.patch("/tickets/:ticketId/status", updateTicketStatus);
 
-/* 📊 STATS */
+/*  TICKET REPORTS */
+const {
+  getTicketReports,
+  updateReportStatus,
+  deleteReport,
+  deleteTicketFromReport
+} = require("../controllers/adminTicketReports.controller");
+
+router.get("/ticket-reports", getTicketReports);
+router.patch("/ticket-reports/:reportId/status", updateReportStatus);
+router.delete("/ticket-reports/:reportId", deleteReport);
+router.delete("/ticket-reports/:reportId/ticket", deleteTicketFromReport);
+
+/*  STATS */
 const { getStats } = require("../controllers/adminStats.controller");
 router.get("/stats", getStats);
 
-/* 🏭 SITES */
+/*  SITES */
 const {
   getSites,
   createSite,
@@ -42,7 +59,7 @@ router.patch("/sites/:siteId/disable", disableSite);
 router.patch("/sites/:siteId/enable", enableSite);
 router.delete("/sites/:siteId", deleteSite);
 
-/* 🏗 SUB-SITES */
+/*  SUB-SITES */
 const {
   createSubSite,
   getSubSitesBySite,
@@ -57,7 +74,7 @@ router.patch("/sites/:siteId/subsites/:subSiteId/disable", disableSubSite);
 router.patch("/sites/:siteId/subsites/:subSiteId/enable", enableSubSite);
 router.delete("/sites/:siteId/subsites/:subSiteId", deleteSubSite);
 
-/* 👥 ADMIN MANAGEMENT */
+/*  ADMIN MANAGEMENT */
 const {
   getAdmins,
   createAdmin,
@@ -72,7 +89,7 @@ router.patch("/admins/:adminId/status", updateAdminStatus);
 router.delete("/admins/:adminId", deleteAdmin);
 router.patch("/admins/:adminId/reset-password", resetAdminPassword);
 
-/* 📱 QR CODE GENERATION */
+/*  QR CODE GENERATION */
 const { generateQRCode } = require("../controllers/adminQR.controller");
 
 router.get("/sites/:siteId/qr", generateQRCode);

@@ -136,6 +136,19 @@ No immediate Life-Saving Rule violation was identified.
 Your observation has been shared with the safety team for review.
 `,
 
+  AI_SAFE_MESSAGE: (ai) => `
+✅ Safety Analysis Complete
+
+Risk Level: ${ai.riskLevel}
+
+Observation:
+${ai.observationSummary}
+
+No immediate Life-Saving Rule violation detected. However, your report has been logged and the safety team will review it.
+
+Thank you for staying vigilant!
+`,
+
   /* =====================================================
      🔎 STATUS COMMAND RESPONSE
   ===================================================== */

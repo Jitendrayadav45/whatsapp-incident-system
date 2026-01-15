@@ -41,7 +41,7 @@ export default function Login() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%)",
+        backgroundImage: "linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%)",
         backgroundSize: "400% 400%",
         animation: "gradientShift 15s ease infinite",
         position: "relative",
@@ -53,7 +53,7 @@ export default function Login() {
         style={{
           position: "absolute",
           inset: 0,
-          background: "radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.3) 0%, transparent 50%)",
+          backgroundImage: "radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.3) 0%, transparent 50%)",
           animation: "pulse 8s ease-in-out infinite",
         }}
       />
@@ -67,7 +67,7 @@ export default function Login() {
             width: `${Math.random() * 100 + 30}px`,
             height: `${Math.random() * 100 + 30}px`,
             borderRadius: "50%",
-            background: `rgba(255, 255, 255, ${Math.random() * 0.1 + 0.05})`,
+            backgroundColor: `rgba(255, 255, 255, ${Math.random() * 0.1 + 0.05})`,
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
             animation: `float ${Math.random() * 10 + 15}s ease-in-out infinite`,
@@ -86,7 +86,7 @@ export default function Login() {
           width: "200px",
           height: "200px",
           borderRadius: "30% 70% 70% 30% / 30% 30% 70% 70%",
-          background: "linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1))",
+          backgroundImage: "linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1))",
           animation: "morphing 20s ease-in-out infinite",
           filter: "blur(40px)",
         }}
@@ -99,7 +99,7 @@ export default function Login() {
           width: "250px",
           height: "250px",
           borderRadius: "63% 37% 54% 46% / 55% 48% 52% 45%",
-          background: "linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(236, 72, 153, 0.15))",
+          backgroundImage: "linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(236, 72, 153, 0.15))",
           animation: "morphing 25s ease-in-out infinite reverse",
           filter: "blur(50px)",
         }}
@@ -637,7 +637,7 @@ export default function Login() {
                 fontSize: "17px",
                 fontWeight: "700",
                 color: "#ffffff",
-                background: loading
+                backgroundImage: loading
                   ? "linear-gradient(135deg, #64748b, #475569)"
                   : "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%)",
                 backgroundSize: "200% 100%",
@@ -699,7 +699,7 @@ export default function Login() {
                   style={{
                     position: "absolute",
                     inset: 0,
-                    background: "linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%)",
+                    backgroundImage: "linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%)",
                     animation: "shimmer 3s infinite",
                     pointerEvents: "none",
                   }}

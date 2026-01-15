@@ -1,10 +1,6 @@
 const axios = require("axios");
 
-/**
- * Send WhatsApp message
- * - REAL WhatsApp API always
- * - Test mode handled OUTSIDE this file
- */
+// Send WhatsApp message
 async function sendWhatsAppReply(to, message) {
   if (!process.env.WHATSAPP_TOKEN || !process.env.PHONE_NUMBER_ID) {
     console.error("❌ WhatsApp credentials missing");

@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { getTicketsApi } from "../api/tickets.api";
+import { getTicketReports } from "../api/ticketReports.api";
 
-export default function useTickets(filters) {
+export default function useTicketReports(filters) {
   const [data, setData] = useState([]);
   const [meta, setMeta] = useState({ page: 1, totalPages: 1, total: 0, limit: filters?.limit || 20 });
   const [loading, setLoading] = useState(true);
   const [refreshToken, setRefreshToken] = useState(0);
 
-  // Debounce client-side filter changes to avoid firing a request per keystroke.
+  // Debounce client-side filter changes
   const [debouncedFilters, setDebouncedFilters] = useState(filters);
 
   useEffect(() => {
@@ -18,7 +18,7 @@ export default function useTickets(filters) {
   useEffect(() => {
     setLoading(true);
 
-    getTicketsApi(debouncedFilters)
+    getTicketReports(debouncedFilters)
       .then((res) => {
         setData(res.data);
         setMeta({

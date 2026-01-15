@@ -19,7 +19,7 @@ const ticketSchema = new mongoose.Schema(
       index: true,
     },
 
-    phoneHash: {
+    phone: {
       type: String,
       required: true,
       index: true, // duplicate detection
@@ -92,11 +92,21 @@ const ticketSchema = new mongoose.Schema(
     },
 
     /* ============================
+       RESOLUTION DETAILS
+    ============================ */
+    resolutionDetails: {
+      photoUrl: String,           // Cloudinary URL
+      notes: String,              // Optional resolution notes
+      resolvedBy: String,         // Admin username who resolved
+      resolvedAt: Date            // Timestamp when resolved
+    },
+
+    /* ============================
        TICKET STATUS
     ============================ */
     status: {
       type: String,
-      enum: ["OPEN", "IN_PROGRESS", "RESOLVED"],
+      enum: ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"],
       default: "OPEN",
       index: true,
     },
@@ -107,11 +117,11 @@ const ticketSchema = new mongoose.Schema(
 );
 
 /* =====================================================
-   📌 PRODUCTION INDEXES (CRITICAL)
+    PRODUCTION INDEXES (CRITICAL)
 ===================================================== */
 
 /**
- * 1️⃣ Main dashboard queries
+ *  Main dashboard queries
  * OWNER / SITE_ADMIN / SUB_SITE_ADMIN
  */
 ticketSchema.index(
@@ -120,7 +130,7 @@ ticketSchema.index(
 );
 
 /**
- * 2️⃣ Site-level views (SITE_ADMIN)
+ *  Site-level views (SITE_ADMIN)
  */
 ticketSchema.index(
   { siteId: 1, status: 1, createdAt: -1 },
@@ -128,7 +138,7 @@ ticketSchema.index(
 );
 
 /**
- * 3️⃣ Sub-site views (SUB_SITE_ADMIN)
+ *  Sub-site views (SUB_SITE_ADMIN)
  */
 ticketSchema.index(
   { siteId: 1, subSiteId: 1, createdAt: -1 },
@@ -136,7 +146,7 @@ ticketSchema.index(
 );
 
 /**
- * 4️⃣ Fast ticket lookup
+ *  Fast ticket lookup
  */
 ticketSchema.index(
   { ticketId: 1 },
@@ -144,11 +154,11 @@ ticketSchema.index(
 );
 
 /**
- * 5️⃣ Duplicate detection support
+ *  Duplicate detection support
  */
 ticketSchema.index(
-  { phoneHash: 1, siteId: 1, createdAt: -1 },
-  { name: "idx_duplicate_detection" }
+  { phone: 1, siteId: 1, createdAt: -1 },
+  { name: "idx_duplicate_detection_phone" }
 );
 
 module.exports = mongoose.model("Ticket", ticketSchema);

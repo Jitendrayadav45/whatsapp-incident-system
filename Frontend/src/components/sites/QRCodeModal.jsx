@@ -1,11 +1,28 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { generateSiteQR, generateSubSiteQR } from "../../api/sites.api";
+import { useAuth } from "../../auth/useAuth";
 
 export default function QRCodeModal({ site, subSite, onClose }) {
+  const { user } = useAuth();
   const [qrData, setQrData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  const roleBadgeLabel = (() => {
+    if (!user?.role) return null;
+    if (user.role === "OWNER") return "Owner";
+    if (user.role === "SITE_ADMIN") return "Site Admin";
+    if (user.role === "SUB_SITE_ADMIN") return "Sub-Site Admin";
+    return null;
+  })();
+
+  const roleBadgeValue = (() => {
+    if (!user?.role) return null;
+    if (user.role === "SUB_SITE_ADMIN") return subSite?.subSiteId || user.allowedSubSites?.[0] || subSite?.subSiteName || null;
+    return site?.siteId || null;
+  })();
 
   useEffect(() => {
     loadQRCode();
@@ -52,9 +69,11 @@ export default function QRCodeModal({ site, subSite, onClose }) {
     if (!qrData?.waLink) return;
     
     navigator.clipboard.writeText(qrData.waLink).then(() => {
-      alert('✅ WhatsApp link copied to clipboard!');
+      setToast({ message: "WhatsApp link copied", type: "success" });
+      setTimeout(() => setToast(null), 2500);
     }).catch(() => {
-      alert('❌ Failed to copy link');
+      setToast({ message: "Failed to copy link", type: "error" });
+      setTimeout(() => setToast(null), 2500);
     });
   }
 
@@ -100,6 +119,11 @@ export default function QRCodeModal({ site, subSite, onClose }) {
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {toast && (
+          <div className={`qr-toast ${toast.type}`}>
+            {toast.type === "success" ? "✅" : "⚠️"} {toast.message}
+          </div>
+        )}
         {/* Header */}
         <div style={{
           display: "flex",
@@ -132,33 +156,58 @@ export default function QRCodeModal({ site, subSite, onClose }) {
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: "50%",
-              background: "rgba(239, 68, 68, 0.1)",
-              border: "1px solid rgba(239, 68, 68, 0.3)",
-              color: "#fca5a5",
-              fontSize: "1.25rem",
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(239, 68, 68, 0.2)";
-              e.currentTarget.style.transform = "scale(1.1)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)";
-              e.currentTarget.style.transform = "scale(1)";
-            }}
-          >
-            ×
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            {roleBadgeLabel && (
+              <div style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.6rem",
+                padding: "0.65rem 0.95rem",
+                borderRadius: "999px",
+                border: "1px solid rgba(139, 92, 246, 0.45)",
+                background: "rgba(139, 92, 246, 0.14)",
+                color: "#e9d5ff",
+                fontSize: "0.9rem",
+                fontWeight: 700,
+                whiteSpace: "nowrap",
+                letterSpacing: "0.2px"
+              }}>
+                <span>🛡 {roleBadgeLabel}</span>
+                {roleBadgeValue && (
+                  <span style={{ color: "#fff", fontWeight: 800 }}>
+                    {roleBadgeValue}
+                  </span>
+                )}
+              </div>
+            )}
+            <button
+              onClick={onClose}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: "50%",
+                background: "rgba(239, 68, 68, 0.1)",
+                border: "1px solid rgba(239, 68, 68, 0.3)",
+                color: "#fca5a5",
+                fontSize: "1.25rem",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(239, 68, 68, 0.2)";
+                e.currentTarget.style.transform = "scale(1.1)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)";
+                e.currentTarget.style.transform = "scale(1)";
+              }}
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         {/* Location Info */}
@@ -424,6 +473,21 @@ export default function QRCodeModal({ site, subSite, onClose }) {
         .qr-modal-content::-webkit-scrollbar-thumb:hover {
           background: rgba(59, 130, 246, 0.7);
         }
+
+          .qr-toast {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+            z-index: 1000000;
+            backdrop-filter: blur(6px);
+          }
+          .qr-toast.success { background: linear-gradient(135deg, #22c55e, #16a34a); border: 1px solid rgba(34,197,94,0.5); }
+          .qr-toast.error { background: linear-gradient(135deg, #ef4444, #dc2626); border: 1px solid rgba(239,68,68,0.5); }
       `}</style>
     </div>
   );

@@ -120,6 +120,13 @@ export default function Dashboard() {
           gradient="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"
           subtitle={`${resolutionRate}% resolution rate`}
         />
+        <StatsCard 
+          title="Closed" 
+          value={data.closed} 
+          icon="🔒"
+          gradient="linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)"
+          subtitle={`${Math.round((data.closed / data.totalTickets) * 100)}% of total`}
+        />
       </div>
 
       {/* Additional Metrics */}

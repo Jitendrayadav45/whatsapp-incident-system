@@ -8,6 +8,21 @@ const { generateSiteQR } = require("../utils/qr.generator");
 async function generateQRCode(req, res) {
   try {
     const { siteId, subSiteId } = req.params;
+    const admin = req.admin;
+
+    // Role-based authorization
+    if (admin.role === "SITE_ADMIN") {
+      if (!admin.allowedSites?.includes(siteId)) {
+        return res.status(403).json({ success: false, message: "Not authorized for this site" });
+      }
+    } else if (admin.role === "SUB_SITE_ADMIN") {
+      if (!admin.allowedSites?.includes(siteId)) {
+        return res.status(403).json({ success: false, message: "Not authorized for this site" });
+      }
+      if (subSiteId && !admin.allowedSubSites?.includes(subSiteId)) {
+        return res.status(403).json({ success: false, message: "Not authorized for this sub-site" });
+      }
+    }
     
     // Get WhatsApp number from environment (remove + sign for wa.me)
     let whatsappNumber = process.env.PHONE_NUMBER || "+918741843979";
