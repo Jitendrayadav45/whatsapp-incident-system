@@ -26,6 +26,20 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 // DB connect
 connectDB();
 
+// Health check endpoint (for monitoring/cron jobs)
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Root endpoint
+app.get("/", (req, res) => {
+  res.send("WhatsApp Incident Backend is running");
+});
+
 // routes
 app.use("/webhook", webhookRoutes);
 app.use("/api", adminRoutes);
